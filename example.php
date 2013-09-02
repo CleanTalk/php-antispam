@@ -1,4 +1,15 @@
 <?php
+
+/**
+ * Cleantalk example
+ *
+ * @package Cleantalk Example
+ * @copyright (C) 2011 - 2012 Сleantalk team (http://cleantalk.ru)
+ * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
+ * @see http://cleantalk.ru/wiki/doku.php/api
+ *
+*/
+
 require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
 // Take params from config
