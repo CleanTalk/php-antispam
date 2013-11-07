@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.21.9
+ * @version 1.21.10
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -508,9 +508,6 @@ class Cleantalk {
                 break;
 
             case 'check_newuser':
-                if (empty($request->sender_nickname)) {
-                    $error_params[] = 'sender_nickname';
-                }
                 if (empty($request->sender_email)) {
                     $error_params[] = 'sender_email';
                 }
