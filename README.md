@@ -3,6 +3,17 @@ php-antispam
 
 A PHP API for antispam service cleantalk.org. Invisible protection from spam, no captches, no puzzles, no animals and no math.
 
+## How API stops spam?
+API uses several simple tests to stop spammers.
+  * Spam bots signatures.
+  * Blacklists checks by Email, IP, web-sites domain names.
+  * JavaScript availability.
+  * Comment submit time.
+  * Relevance test for the comment.
+
+## How API works?
+API sends a comment's text and several previous approved comments to the servers. Servers evaluates the relevance of the comment's text on the topic, tests on spam and finaly provides a solution - to publish or put on manual moderation of comments. If a comment is placed on manual moderation, the plugin adds to the text of a comment explaining the reason for the ban server publishing.
+
 ## Requirements
 
    * PHP 4.3 and above 
@@ -51,13 +62,3 @@ API returns PHP object:
   * errno (int) - error number. errno == 0 if requests successfull.
   * errtstr (string) - comment for error issue, errstr == null if requests successfull.
   
-## How API stops spam?
-API uses several simple tests to stop spammers.
-  * Spam bots signatures.
-  * Blacklists checks by Email, IP, web-sites domain names.
-  * JavaScript availability.
-  * Comment submit time.
-  * Relevance test for the comment.
-
-## How API works?
-API sends a comment's text and several previous approved comments to the servers. Servers evaluates the relevance of the comment's text on the topic, tests on spam and finaly provides a solution - to publish or put on manual moderation of comments. If a comment is placed on manual moderation, the plugin adds to the text of a comment explaining the reason for the ban server publishing.
