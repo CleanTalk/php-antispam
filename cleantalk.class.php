@@ -2,13 +2,13 @@
 /**
  * Cleantalk base class
  *
- * @version 1.21.11
+ * @version 1.21.12
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
  * @copyright (C) 2013 СleanTalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
- * @see http://cleantalk.ru/wiki/doku.php/api
+ * @see https://github.com/CleanTalk/php-antispam 
  *
  */
 
@@ -135,6 +135,12 @@ class CleantalkResponse {
     public $inactive = null;
 
     /**
+     * Account status 
+     * @var int  
+     */
+    public $account_status = -1;
+
+    /**
      * Create server response
      *
      * @param type $response
@@ -151,8 +157,8 @@ class CleantalkResponse {
 
 			$this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
             // Разбираем  ответ с клинтолка
-            $this->stop_words = isset($obj->stop_words) ? $obj->stop_words : null;
-            $this->comment = isset($obj->comment) ? utf8_decode($obj->comment) : null;
+            $this->stop_words = isset($obj->stop_words) ? utf8_decode($obj->stop_words) : null;
+            $this->comment = isset($obj->comment) ? $obj->comment : null;
             $this->blacklisted = (isset($obj->blacklisted)) ? $obj->blacklisted : null;
             $this->allow = (isset($obj->allow)) ? $obj->allow : 0;
             $this->id = (isset($obj->id)) ? $obj->id : null;
@@ -165,6 +171,7 @@ class CleantalkResponse {
             $this->sms_error_text = (isset($obj->sms_error_text)) ? $obj->sms_error_text : null;
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
+            $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
                 $this->comment = '*** ' . $this->errstr . ' Automoderator cleantalk.org ***'; 
@@ -508,9 +515,6 @@ class Cleantalk {
                 break;
 
             case 'check_newuser':
-                if (empty($request->sender_email)) {
-                    $error_params[] = 'sender_email';
-                }
                 break;
 
             case 'send_feedback':
