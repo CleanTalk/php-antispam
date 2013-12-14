@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.21.13
+ * @version 1.21.14
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -725,6 +725,15 @@ class Cleantalk {
         
         $response = new CleantalkResponse(null, $result);
 
+	if (!empty($this->data_codepage) && $this->data_codepage !== 'UTF-8') {
+	    if (!empty($response->comment))
+		$response->comment = $this->stringFromUTF8($response->comment, $this->data_codepage);
+	    if (!empty($response->errstr))
+		$response->errstr = $this->stringFromUTF8($response->errstr, $this->data_codepage);
+	    if (!empty($response->sms_error_text))
+		$response->sms_error_text = $this->stringFromUTF8($response->sms_error_text, $this->data_codepage);
+	}
+
         return $response;
     }
     
@@ -889,6 +898,20 @@ class Cleantalk {
 
             $encoding = mb_detect_encoding($str);
             return mb_convert_encoding($str, 'UTF-8', $encoding);
+        }
+        
+        return $str;
+    }
+    
+    /**
+    * Function convert string from UTF8 
+    * param string
+    * param string
+    * @return string
+    */
+    function stringFromUTF8($str, $data_codepage = null){
+        if (preg_match('//u', $str) && function_exists('mb_convert_encoding') && $data_codepage !== null) {
+            return mb_convert_encoding($str, $data_codepage, 'UTF-8');
         }
         
         return $str;
