@@ -8,7 +8,6 @@ API uses several simple tests to stop spammers.
   * Spam bots signatures.
   * Blacklists checks by Email, IP, web-sites domain names.
   * JavaScript availability.
-  * Comment submit time.
   * Relevance test for the comment.
 
 ## How API works?
