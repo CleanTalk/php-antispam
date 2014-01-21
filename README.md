@@ -29,7 +29,7 @@ require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.ru/api2.0/';
-$auth_key = 'liemouse'; // Set Cleantalk auth key
+$auth_key = 'enter key'; // Set Cleantalk auth key
 
 if (count($_POST)) {
     $sender_nickname = 'John Dow';
@@ -100,7 +100,7 @@ require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.ru/api2.0/';
-$auth_key = 'liemouse'; // Set Cleantalk auth key
+$auth_key = 'enter key'; // Set Cleantalk auth key
 
 if (count($_POST)) {
     $sender_nickname = 'John Dow';
