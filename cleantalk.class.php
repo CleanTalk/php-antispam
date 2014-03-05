@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.21.14
+ * @version 1.21.15
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -174,7 +174,7 @@ class CleantalkResponse {
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
-                $this->comment = '*** ' . $this->errstr . ' Automoderator cleantalk.org ***'; 
+                $this->comment = '*** ' . $this->errstr . ' Antispam cleantalk.org ***'; 
         }
     }
 
@@ -616,7 +616,8 @@ class Cleantalk {
 
             $result = curl_exec($ch);
             curl_close($ch); 
-        } else {
+        }
+        if ($result === false) {
             $allow_url_fopen = ini_get('allow_url_fopen');
             if (function_exists('file_get_contents') && isset($allow_url_fopen) && $allow_url_fopen == '1') {
                 $opts = array('http' =>
