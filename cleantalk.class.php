@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.21.16
+ * @version 1.22
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -343,7 +343,7 @@ class Cleantalk {
 	* Server connection timeout in seconds 
 	* @var int
 	*/
-	private $server_timeout = 5;
+	private $server_timeout = 15;
 
     /**
      * Cleantalk server url
@@ -699,7 +699,6 @@ class Cleantalk {
             if (empty($pool)) {
                 return false;
             } else {
-
                 // Loop until find work server
                 foreach ($this->get_servers_ip($pool) as $server) {
                     if ($server['host'] === 'localhost' || $server['ip'] === null) {
@@ -724,17 +723,17 @@ class Cleantalk {
                 }
             }
         }
-        
+
         $response = new CleantalkResponse(null, $result);
 
-	if (!empty($this->data_codepage) && $this->data_codepage !== 'UTF-8') {
-	    if (!empty($response->comment))
-		$response->comment = $this->stringFromUTF8($response->comment, $this->data_codepage);
-	    if (!empty($response->errstr))
-		$response->errstr = $this->stringFromUTF8($response->errstr, $this->data_codepage);
-	    if (!empty($response->sms_error_text))
-		$response->sms_error_text = $this->stringFromUTF8($response->sms_error_text, $this->data_codepage);
-	}
+        if (!empty($this->data_codepage) && $this->data_codepage !== 'UTF-8') {
+            if (!empty($response->comment))
+            $response->comment = $this->stringFromUTF8($response->comment, $this->data_codepage);
+            if (!empty($response->errstr))
+            $response->errstr = $this->stringFromUTF8($response->errstr, $this->data_codepage);
+            if (!empty($response->sms_error_text))
+            $response->sms_error_text = $this->stringFromUTF8($response->sms_error_text, $this->data_codepage);
+        }
 
         return $response;
     }
