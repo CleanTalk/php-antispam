@@ -3,7 +3,7 @@
     "version": "1.22",
     "license": "GPL-3.0",
     "support": {
-        "email": "welcome@cleantalk.org",
+        "email": "welcome@cleantalk.org"
     },
     "homepage": "http://cleantalk.org",
     "keywords": ["spam", "anti-spam", "antispam", "api"]
