@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.22
+ * @version 1.23
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -898,7 +898,8 @@ class Cleantalk {
                 return mb_convert_encoding($str, 'UTF-8', $data_codepage);
 
             $encoding = mb_detect_encoding($str);
-            return mb_convert_encoding($str, 'UTF-8', $encoding);
+            if ($encoding)
+                return mb_convert_encoding($str, 'UTF-8', $encoding);
         }
         
         return $str;
