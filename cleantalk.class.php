@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.26
+ * @version 1.27
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -872,16 +872,49 @@ class Cleantalk {
         return $message;
     }
 
-    /*
-       Get user IP behind proxy server
+    /**
+    *   Get user IP behind proxy server
     */
-    public function ct_session_ip( $data_ip ) {
-        if ($data_ip == '127.0.0.1' && isset($_SERVER['HTTP_X_FORWARDED_FOR']) && preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $data_ip = $_SERVER['HTTP_X_FORWARDED_FOR']; 
+    function ct_session_ip( $data_ip ) {
+        if (!preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
+            return $data_ip;
+        }
+
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $private_src_ip = false;
+            $private_nets = array(
+                '10.0.0.0/8',
+                '127.0.0.0/8',
+                '176.16.0.0/12',
+                '192.168.0.0/16',
+            );
+
+            foreach ($private_nets as $v) {
+
+                // Private IP found
+                if ($private_src_ip) {
+                    continue;
+                }
+                
+                if (net_match($v, $data_ip)) {
+                    $private_src_ip = true;
+                }
+            }
+            if ($private_src_ip) {
+                $data_ip = $_SERVER['HTTP_X_FORWARDED_FOR']; 
+            }
         }
 
         return $data_ip;
     }
+
+    /**
+    * From http://php.net/manual/en/function.ip2long.php#82397
+    */
+    public function net_match($CIDR,$IP) { 
+        list ($net, $mask) = explode ('/', $CIDR); 
+        return ( ip2long ($IP) & ~((1 << (32 - $mask)) - 1) ) == ip2long ($net); 
+    } 
     
     /**
     * Function to check response time
