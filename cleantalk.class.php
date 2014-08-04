@@ -875,7 +875,7 @@ class Cleantalk {
     /**
     *   Get user IP behind proxy server
     */
-    function ct_session_ip( $data_ip ) {
+    public function ct_session_ip( $data_ip ) {
         if (!preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
             return $data_ip;
         }
