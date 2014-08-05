@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.27
+ * @version 1.28
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -896,7 +896,7 @@ class Cleantalk {
                     continue;
                 }
                 
-                if (net_match($v, $data_ip)) {
+                if ($this->net_match($v, $data_ip)) {
                     $private_src_ip = true;
                 }
             }
