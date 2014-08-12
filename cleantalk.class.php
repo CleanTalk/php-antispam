@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.28
+ * @version 1.29
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.ru)
@@ -397,8 +397,8 @@ class Cleantalk {
      * Use https connection to servers 
      * @var bool 
      */
-    public $ssl_on = false; 
-    
+    public $ssl_on = false;
+
     /**
      * Function checks whether it is possible to publish the message
      * @param CleantalkRequest $request
@@ -876,11 +876,18 @@ class Cleantalk {
     *   Get user IP behind proxy server
     */
     public function ct_session_ip( $data_ip ) {
-        if (!preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
+        if (!$data_ip || !preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
             return $data_ip;
         }
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            
+            $forwarded_ip = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
 
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            // Looking for first value in the list, it should be sender real IP address
+            if (!preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $forwarded_ip[0])) {
+                return $data_ip;
+            }
+
             $private_src_ip = false;
             $private_nets = array(
                 '10.0.0.0/8',
@@ -901,7 +908,8 @@ class Cleantalk {
                 }
             }
             if ($private_src_ip) {
-                $data_ip = $_SERVER['HTTP_X_FORWARDED_FOR']; 
+                // Taking first IP from the list HTTP_X_FORWARDED_FOR 
+                $data_ip = $forwarded_ip[0]; 
             }
         }
 
