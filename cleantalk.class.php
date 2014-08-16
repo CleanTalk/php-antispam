@@ -2,11 +2,11 @@
 /**
  * Cleantalk base class
  *
- * @version 1.29
+ * @version 1.30
  * @package Cleantalk
  * @subpackage Base
- * @author Сleantalk team (welcome@cleantalk.ru)
- * @copyright (C) 2013 СleanTalk team (http://cleantalk.org)
+ * @author Сleantalk team (welcome@cleantalk.org)
+ * @copyright (C) 2014 СleanTalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  * @see https://github.com/CleanTalk/php-antispam 
  *
@@ -400,6 +400,12 @@ class Cleantalk {
     public $ssl_on = false;
 
     /**
+     * Minimal server response in miliseconds to catch the server
+     *
+     */
+    public $min_server_timeout = 100;
+
+    /**
      * Function checks whether it is possible to publish the message
      * @param CleantalkRequest $request
      * @return type
@@ -707,7 +713,7 @@ class Cleantalk {
 					
             $result = $this->sendRequest($msg, $url, $this->server_timeout);
         }
-        
+
         if (($result === false || $result->errno != 0) && $this->stay_on_server == false) {
             
             // Split server url to parts
@@ -808,19 +814,31 @@ class Cleantalk {
                 "ttl" => $this->server_ttl
             );
         } else {
-
-            // $i - to resolve collisions with localhost and 
+            // $i - to resolve collisions with localhost
             $i = 0;
             $r_temp = null;
+            $fast_server_found = false;
             foreach ($response as $server) {
-                $ping = $this->httpPing($server['ip']);
+                
+                // Do not test servers because fast work server found
+                if ($fast_server_found) {
+                    $ping = $this->min_server_timeout; 
+                } else {
+                    $ping = $this->httpPing($server['ip']);
+                    $ping = $ping * 1000;
+                }
                 
                 // -1 server is down, skips not reachable server
-                if ($ping != -1)
-                    $r_temp[$ping * 10000 + $i] = $server;
-
+                if ($ping != -1) {
+                    $r_temp[$ping + $i] = $server;
+                }
                 $i++;
+                
+                if ($ping < $this->min_server_timeout) {
+                    $fast_server_found = true;
+                }
             }
+            
             if (count($r_temp)){
                 ksort($r_temp);
                 $response = $r_temp;
@@ -940,7 +958,6 @@ class Cleantalk {
         $file      = @fsockopen ($host, 80, $errno, $errstr, $this->server_timeout);
         $stoptime  = microtime(true);
         $status    = 0;
-
         if (!$file) {
             $status = -1;  // Site is down
         } else {
