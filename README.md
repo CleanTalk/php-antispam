@@ -132,7 +132,6 @@ if (count($_POST)) {
     $ct_request->sender_nickname = $sender_nickname; 
     $ct_request->js_on = $js_on;
     $ct_request->message = $message; 
-    $ct_request->example = str_repeat('Just example text ', 10);
 
     $ct = new Cleantalk();
     $ct->server_url = $config_url; 
