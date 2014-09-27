@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.30
+ * @version 1.31
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.org)
@@ -597,7 +597,16 @@ class Cleantalk {
         }
         
         $request->method_name = $method;
-
+        
+        //
+        // Removing non UTF8 characters from request, because non UTF8 or malformed characters break json_encode().
+        //
+        foreach ($request as $param => $value) {
+            if (!preg_match('//u', $value)) {
+                $request->{$param} = 'Nulled. Not UTF8 encoded or malformed.'; 
+            }
+        }
+        
         return $request;
     }
     
