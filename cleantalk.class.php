@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.31
+ * @version 1.32
  * @package Cleantalk
  * @subpackage Base
  * @author Сleantalk team (welcome@cleantalk.org)
@@ -343,7 +343,7 @@ class Cleantalk {
 	* Server connection timeout in seconds 
 	* @var int
 	*/
-	private $server_timeout = 15;
+	private $server_timeout = 3;
 
     /**
      * Cleantalk server url
@@ -403,7 +403,7 @@ class Cleantalk {
      * Minimal server response in miliseconds to catch the server
      *
      */
-    public $min_server_timeout = 100;
+    public $min_server_timeout = 150;
 
     /**
      * Function checks whether it is possible to publish the message
@@ -847,7 +847,6 @@ class Cleantalk {
                     $fast_server_found = true;
                 }
             }
-            
             if (count($r_temp)){
                 ksort($r_temp);
                 $response = $r_temp;
