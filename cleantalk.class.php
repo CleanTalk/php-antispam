@@ -403,7 +403,7 @@ class Cleantalk {
      * Minimal server response in miliseconds to catch the server
      *
      */
-    public $min_server_timeout = 150;
+    public $min_server_timeout = 50;
 
     /**
      * Function checks whether it is possible to publish the message
@@ -724,7 +724,6 @@ class Cleantalk {
         }
 
         if (($result === false || $result->errno != 0) && $this->stay_on_server == false) {
-            
             // Split server url to parts
             preg_match("@^(https?://)([^/:]+)(.*)@i", $this->server_url, $matches);
             $url_prefix = '';
@@ -750,13 +749,13 @@ class Cleantalk {
                     if ($server['host'] === 'localhost' || $server['ip'] === null) {
                         $work_url = $server['host'];
                     } else {
-                        $server_host = gethostbyaddr($server['ip']);
+                        $server_host = $server['ip'];
                         $work_url = $server_host;
                     }
                     $work_url = $url_prefix . $work_url; 
                     if (isset($url_suffix)) 
                         $work_url = $work_url . $url_suffix;
-
+                    
                     $this->work_url = $work_url;
                     $this->server_ttl = $server['ttl'];
                     
