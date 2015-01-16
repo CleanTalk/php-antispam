@@ -27,7 +27,7 @@ API sends a comment's text and several previous approved comments to the servers
 require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
 // Take params from config
-$config_url = 'http://moderate.cleantalk.ru/api2.0/';
+$config_url = 'http://moderate.cleantalk.org/api2.0/';
 $auth_key = 'enter key'; // Set Cleantalk auth key
 
 if (count($_POST)) {
@@ -98,7 +98,7 @@ if (count($_POST)) {
 require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
 // Take params from config
-$config_url = 'http://moderate.cleantalk.ru/api2.0/';
+$config_url = 'http://moderate.cleantalk.org/api2.0/';
 $auth_key = 'enter key'; // Set Cleantalk auth key
 
 if (count($_POST)) {
