@@ -2,11 +2,11 @@
 /**
  * Cleantalk base class
  *
- * @version 1.33
+ * @version 1.34
  * @package Cleantalk
  * @subpackage Base
- * @author Сleantalk team (welcome@cleantalk.org)
- * @copyright (C) 2014 СleanTalk team (http://cleantalk.org)
+ * @author Cleantalk team (welcome@cleantalk.org)
+ * @copyright (C) 2014 CleanTalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  * @see https://github.com/CleanTalk/php-antispam 
  *
@@ -411,18 +411,7 @@ class Cleantalk {
      * @return type
      */
     public function isAllowMessage(CleantalkRequest $request) {
-        $error_params = $this->filterRequest('check_message', $request);
-
-        if (!empty($error_params)) {
-            $response = new CleantalkResponse(
-                            array(
-                                'allow' => 0,
-                                'comment' => 'CleanTalk. Request params error: ' . implode(', ', $error_params)
-                            ), null);
-
-            return $response;
-        }
-
+        $this->filterRequest($request);
         $msg = $this->createMsg('check_message', $request);
         return $this->httpRequest($msg);
     }
@@ -433,18 +422,7 @@ class Cleantalk {
      * @return type
      */
     public function isAllowUser(CleantalkRequest $request) {
-        $error_params = $this->filterRequest('check_newuser', $request);
-
-        if (!empty($error_params)) {
-            $response = new CleantalkResponse(
-                            array(
-                                'allow' => 0,
-                                'comment' => 'CleanTalk. Request params error: ' . implode(', ', $error_params)
-                            ), null);
-
-            return $response;
-        }
-
+        $this->filterRequest($request);
         $msg = $this->createMsg('check_newuser', $request);
         return $this->httpRequest($msg);
     }
@@ -456,20 +434,8 @@ class Cleantalk {
      * @return type
      */
     public function sendFeedback(CleantalkRequest $request) {
-        $error_params = $this->filterRequest('send_feedback', $request);
-
-        if (!empty($error_params)) {
-            $response = new CleantalkResponse(
-                            array(
-                                'allow' => 0,
-                                'comment' => 'Cleantalk. Spam protect. Request params error: ' . implode(', ', $error_params)
-                            ), null);
-
-            return $response;
-        }
-
+        $this->filterRequest($request);
         $msg = $this->createMsg('send_feedback', $request);
-        
         return $this->httpRequest($msg);
     }
 
@@ -478,65 +444,46 @@ class Cleantalk {
      * @param CleantalkRequest $request
      * @return type
      */
-    private function filterRequest($method, CleantalkRequest $request) {
-        $error_params = array();
-
+    private function filterRequest(CleantalkRequest &$request) {
         // general and optional
         foreach ($request as $param => $value) {
             if (in_array($param, array('message', 'example', 'agent',
                         'sender_info', 'sender_nickname', 'post_info', 'phone')) && !empty($value)) {
                 if (!is_string($value) && !is_integer($value)) {
-                    $error_params[] = $param;
+                    $request->$param = NULL;
                 }
             }
 
             if (in_array($param, array('stoplist_check', 'allow_links')) && !empty($value)) {
                 if (!in_array($value, array(1, 2))) {
-                    $error_params[] = $param;
+                    $request->$param = NULL;
                 }
             }
             
             if (in_array($param, array('js_on')) && !empty($value)) {
                 if (!is_integer($value)) {
-                    $error_params[] = $param;
+                    $request->$param = NULL;
                 }
             }
 
             if ($param == 'sender_ip' && !empty($value)) {
                 if (!is_string($value)) {
-                    $error_params[] = $param;
+                    $request->$param = NULL;
                 }
             }
 
             if ($param == 'sender_email' && !empty($value)) {
                 if (!is_string($value)) {
-                    $error_params[] = $param;
+                    $request->$param = NULL;
                 }
             }
 
             if ($param == 'submit_time' && !empty($value)) {
                 if (!is_int($value)) {
-                    $error_params[] = $param;
+                    $request->$param = NULL;
                 }
             }
         }
-
-        // special and must be
-        switch ($method) {
-            case 'check_message':
-                break;
-
-            case 'check_newuser':
-                break;
-
-            case 'send_feedback':
-                if (empty($request->feedback)) {
-                    $error_params[] = 'feedback';
-                }
-                break;
-        }
-        
-        return $error_params;
     }
     
 	/**
