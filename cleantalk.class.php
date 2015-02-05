@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.34
+ * @version 1.35
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -590,6 +590,8 @@ class Cleantalk {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             // resolve 'Expect: 100-continue' issue
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+            // see http://stackoverflow.com/a/23322368
+            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
             
             // Disabling CA cert verivication
             // Disabling common name verification
