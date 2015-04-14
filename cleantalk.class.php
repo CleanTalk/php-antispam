@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.35
+ * @version 2.0
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -958,6 +958,72 @@ class Cleantalk {
         
         return $str;
     }
+}
+
+function getAutoKey($email, $host, $platform)
+{
+	$request=Array();
+	$request['method_name'] = 'get_api_key'; 
+	$request['email'] = $email;
+	$request['website'] = $host;
+	$request['platform'] = $platform;
+	$url='https://api.cleantalk.org';
+	$result=sendRawRequest($url,$request);
+	return $result;
+}
+
+function noticePaidTill($api_key)
+{
+	$request=Array();
+	$request['method_name'] = 'notice_paid_till'; 
+	$request['auth_key'] = $api_key;
+	$url='https://api.cleantalk.org';
+	$result=sendRawRequest($url,$request);
+	return $result;
+}
+
+function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
+{
+	$result=null;
+	if(!$isJSON)
+	{
+		$data=http_build_query($data);
+	}
+	else
+	{
+		$data= json_encode($data);
+	}
+	if (function_exists('curl_init') && function_exists('json_decode'))
+	{
+	
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		
+		// receive server response ...
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		// resolve 'Expect: 100-continue' issue
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+		
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+		
+		$result = curl_exec($ch);
+		curl_close($ch);
+	}
+	else
+	{
+		$opts = array(
+		    'http'=>array(
+		        'method'=>"POST",
+		        'content'=>$data)
+		);
+		$context = stream_context_create($opts);
+		$result = @file_get_contents($url, 0, $context);
+	}
+	return $result;
 }
 
 ?>
