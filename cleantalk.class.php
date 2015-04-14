@@ -960,6 +960,15 @@ class Cleantalk {
     }
 }
 
+/**
+ * Function gets access key automatically
+ *
+ * @param string website admin email
+ * @param string website host
+ * @param string website platform
+ * @return type
+ */
+
 function getAutoKey($email, $host, $platform)
 {
 	$request=Array();
@@ -972,6 +981,13 @@ function getAutoKey($email, $host, $platform)
 	return $result;
 }
 
+/**
+ * Function gets information about renew notice
+ *
+ * @param string api_key
+ * @return type
+ */
+
 function noticePaidTill($api_key)
 {
 	$request=Array();
@@ -981,6 +997,16 @@ function noticePaidTill($api_key)
 	$result=sendRawRequest($url,$request);
 	return $result;
 }
+
+/**
+ * Function sends raw request to API server
+ *
+ * @param string url of API server
+ * @param array data to send
+ * @param boolean is data have to be JSON encoded or not
+ * @param integer connect timeout
+ * @return type
+ */
 
 function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
 {
