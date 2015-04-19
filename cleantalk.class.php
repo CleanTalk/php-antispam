@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 1.35
+ * @version 2.0
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -43,7 +43,7 @@ class CleantalkResponse {
      * @var int
      */
     public $stop_words = null;
-
+    
     /**
      * Cleantalk comment
      * @var string
@@ -184,6 +184,12 @@ class CleantalkResponse {
  * Request class
  */
 class CleantalkRequest {
+
+     /**
+     *  All http request headers
+     * @var string
+     */
+     public $all_headers = null;
 
     /**
      * User message
@@ -664,6 +670,7 @@ class Cleantalk {
      */
     private function httpRequest($msg) {
         $result = false;
+        $msg->all_headers=json_encode(apache_request_headers());
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
 				|| $this->stay_on_server == true) {
 	        
@@ -958,6 +965,98 @@ class Cleantalk {
         
         return $str;
     }
+}
+
+/**
+ * Function gets access key automatically
+ *
+ * @param string website admin email
+ * @param string website host
+ * @param string website platform
+ * @return type
+ */
+
+function getAutoKey($email, $host, $platform)
+{
+	$request=Array();
+	$request['method_name'] = 'get_api_key'; 
+	$request['email'] = $email;
+	$request['website'] = $host;
+	$request['platform'] = $platform;
+	$url='https://api.cleantalk.org';
+	$result=sendRawRequest($url,$request);
+	return $result;
+}
+
+/**
+ * Function gets information about renew notice
+ *
+ * @param string api_key
+ * @return type
+ */
+
+function noticePaidTill($api_key)
+{
+	$request=Array();
+	$request['method_name'] = 'notice_paid_till'; 
+	$request['auth_key'] = $api_key;
+	$url='https://api.cleantalk.org';
+	$result=sendRawRequest($url,$request);
+	return $result;
+}
+
+/**
+ * Function sends raw request to API server
+ *
+ * @param string url of API server
+ * @param array data to send
+ * @param boolean is data have to be JSON encoded or not
+ * @param integer connect timeout
+ * @return type
+ */
+
+function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
+{
+	$result=null;
+	if(!$isJSON)
+	{
+		$data=http_build_query($data);
+	}
+	else
+	{
+		$data= json_encode($data);
+	}
+	if (function_exists('curl_init') && function_exists('json_decode'))
+	{
+	
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		
+		// receive server response ...
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		// resolve 'Expect: 100-continue' issue
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+		
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+		
+		$result = curl_exec($ch);
+		curl_close($ch);
+	}
+	else
+	{
+		$opts = array(
+		    'http'=>array(
+		        'method'=>"POST",
+		        'content'=>$data)
+		);
+		$context = stream_context_create($opts);
+		$result = @file_get_contents($url, 0, $context);
+	}
+	return $result;
 }
 
 ?>
