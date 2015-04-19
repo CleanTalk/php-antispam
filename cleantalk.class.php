@@ -43,7 +43,7 @@ class CleantalkResponse {
      * @var int
      */
     public $stop_words = null;
-
+    
     /**
      * Cleantalk comment
      * @var string
@@ -184,6 +184,12 @@ class CleantalkResponse {
  * Request class
  */
 class CleantalkRequest {
+
+     /**
+     *  All http request headers
+     * @var string
+     */
+     public $all_headers = null;
 
     /**
      * User message
@@ -664,6 +670,7 @@ class Cleantalk {
      */
     private function httpRequest($msg) {
         $result = false;
+        $msg->all_headers=json_encode(apache_request_headers());
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
 				|| $this->stay_on_server == true) {
 	        
