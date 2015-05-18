@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.0
+ * @version 2.0.0
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -298,7 +298,7 @@ class CleantalkRequest {
 
     /**
      * Phone number
-     * @var type 
+     * @var type
      */
     public $phone = null;
     
@@ -310,7 +310,7 @@ class CleantalkRequest {
 
     /**
      * Fill params with constructor
-     * @param type $params
+     * @param array $params
      */
     public function __construct($params = null) {
         if (is_array($params) && count($params) > 0) {
@@ -1071,7 +1071,6 @@ if( !function_exists('apache_request_headers') )
 			if( preg_match($rx_http, $key) )
 			{
 				$arh_key = preg_replace($rx_http, '', $key);
-				$rx_matches = array();
 				$rx_matches = explode('_', $arh_key);
 				if( count($rx_matches) > 0 and strlen($arh_key) > 2 )
 				{
@@ -1084,5 +1083,3 @@ if( !function_exists('apache_request_headers') )
 		return( $arh );
 	}
 }
-
-?>

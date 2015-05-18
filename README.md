@@ -1,6 +1,8 @@
 php-antispam
 ============
 
+[![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v/stable.svg)](https://packagist.org/packages/cleantalk/php-antispam)
+
 A PHP API for antispam service cleantalk.org. Invisible protection from spam, no captches, no puzzles, no animals and no math.
 
 ## How API stops spam?
