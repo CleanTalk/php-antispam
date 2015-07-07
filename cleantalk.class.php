@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.0.0
+ * @version 2.0
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -190,6 +190,30 @@ class CleantalkRequest {
      * @var string
      */
      public $all_headers = null;
+     
+     /**
+     *  IP address of connection
+     * @var string
+     */
+     //public $remote_addr = null;
+     
+     /**
+     *  Last error number
+     * @var integer
+     */
+     public $last_error_no = null;
+     
+     /**
+     *  Last error time
+     * @var integer
+     */
+     public $last_error_time = null;
+     
+     /**
+     *  Last error text
+     * @var string
+     */
+     public $last_error_text = null;
 
     /**
      * User message
@@ -298,7 +322,7 @@ class CleantalkRequest {
 
     /**
      * Phone number
-     * @var type
+     * @var type 
      */
     public $phone = null;
     
@@ -310,7 +334,7 @@ class CleantalkRequest {
 
     /**
      * Fill params with constructor
-     * @param array $params
+     * @param type $params
      */
     public function __construct($params = null) {
         if (is_array($params) && count($params) > 0) {
@@ -671,6 +695,11 @@ class Cleantalk {
     private function httpRequest($msg) {
         $result = false;
         $msg->all_headers=json_encode(apache_request_headers());
+        //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
+        //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        $si=json_decode($msg->sender_info,true);
+        $si['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
 				|| $this->stay_on_server == true) {
 	        
@@ -1026,6 +1055,7 @@ function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
 	{
 		$data= json_encode($data);
 	}
+	$curl_exec=false;
 	if (function_exists('curl_init') && function_exists('json_decode'))
 	{
 	
@@ -1043,10 +1073,14 @@ function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 		
-		$result = curl_exec($ch);
-		curl_close($ch);
+		$result = @curl_exec($ch);
+		if($result!==false)
+		{
+			$curl_exec=true;
+		}
+		@curl_close($ch);
 	}
-	else
+	if(!$curl_exec)
 	{
 		$opts = array(
 		    'http'=>array(
@@ -1061,7 +1095,6 @@ function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
 
 if( !function_exists('apache_request_headers') )
 {
-
 	function apache_request_headers()
 	{
 		$arh = array();
@@ -1071,6 +1104,7 @@ if( !function_exists('apache_request_headers') )
 			if( preg_match($rx_http, $key) )
 			{
 				$arh_key = preg_replace($rx_http, '', $key);
+				$rx_matches = array();
 				$rx_matches = explode('_', $arh_key);
 				if( count($rx_matches) > 0 and strlen($arh_key) > 2 )
 				{
