@@ -594,7 +594,7 @@ class Cleantalk {
      */
     private function sendRequest($data = null, $url, $server_timeout = 3) {
         // Convert to array
-        $data = json_decode(json_encode($data), true);
+        $data = (array)json_decode(json_encode($data), true);
 
         // Convert to JSON
         $data = json_encode($data);
@@ -697,7 +697,7 @@ class Cleantalk {
         $msg->all_headers=json_encode(apache_request_headers());
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
-        $si=json_decode($msg->sender_info,true);
+        $si=(array)json_decode($msg->sender_info,true);
         $si['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
@@ -889,7 +889,7 @@ class Cleantalk {
         if (!$data_ip || !preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
             return $data_ip;
         }
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        /*if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             
             $forwarded_ip = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
 
@@ -923,7 +923,8 @@ class Cleantalk {
             }
         }
 
-        return $data_ip;
+        return $data_ip;*/
+        return cleantalk_get_real_ip();
     }
 
     /**
@@ -1116,4 +1117,29 @@ if( !function_exists('apache_request_headers') )
 		}
 		return( $arh );
 	}
+}
+
+function cleantalk_get_real_ip()
+{
+	if ( function_exists( 'apache_request_headers' ) )
+	{
+		$headers = apache_request_headers();
+	}
+	else
+	{
+		$headers = $_SERVER;
+	}
+	if ( array_key_exists( 'X-Forwarded-For', $headers ) && filter_var( $headers['X-Forwarded-For'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) )
+	{
+		$the_ip = $headers['X-Forwarded-For'];
+	}
+	elseif ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ) && filter_var( $headers['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ))
+	{
+		$the_ip = $headers['HTTP_X_FORWARDED_FOR'];
+	}
+	else
+	{
+		$the_ip = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+	}
+	return $the_ip;
 }
