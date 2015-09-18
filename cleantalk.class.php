@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.0.0
+ * @version 2.0.1
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
