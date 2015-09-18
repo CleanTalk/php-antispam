@@ -428,6 +428,12 @@ class Cleantalk {
      * @var bool 
      */
     public $ssl_on = false;
+    
+    /**
+     * Path to SSL certificate 
+     * @var string
+     */
+    public $ssl_path = '';
 
     /**
      * Minimal server response in miliseconds to catch the server
@@ -625,9 +631,14 @@ class Cleantalk {
             
             // Disabling CA cert verivication
             // Disabling common name verification
-            if ($this->ssl_on) {
+            if ($this->ssl_on && $this->ssl_path=='') {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            }
+            else if ($this->ssl_on && $this->ssl_path!='') {
+            	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+                curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
             }
 
             $result = curl_exec($ch);
