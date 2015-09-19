@@ -709,7 +709,18 @@ class Cleantalk {
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $si=(array)json_decode($msg->sender_info,true);
-        $si['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        if(defined('IN_PHPBB'))
+        {
+        	global $request;
+        	if(method_exists($request,'server'))
+        	{
+        		$si['remote_addr']=$request->server('REMOTE_ADDR');
+        	}
+        }
+        else
+        {
+        	$si['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        }
         $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
 				|| $this->stay_on_server == true) {
