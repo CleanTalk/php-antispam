@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.0.1
+ * @version 2.1.0
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -1016,6 +1016,21 @@ class Cleantalk {
         }
         
         return $str;
+    }
+    
+    /**
+     * Function gets information about spam active networks 
+     *
+     * @param string api_key
+     * @return JSON/array 
+     */
+    public function get_2s_blacklists_db ($api_key) {
+        $request=Array();
+        $request['method_name'] = '2s_blacklists_db'; 
+        $request['auth_key'] = $api_key;
+        $url='https://api.cleantalk.org';
+        $result=sendRawRequest($url,$request);
+        return $result;
     }
 }
 
