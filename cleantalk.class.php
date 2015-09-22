@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.1.0
+ * @version 2.1.1
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -428,12 +428,6 @@ class Cleantalk {
      * @var bool 
      */
     public $ssl_on = false;
-    
-    /**
-     * Path to SSL certificate 
-     * @var string
-     */
-    public $ssl_path = '';
 
     /**
      * Minimal server response in miliseconds to catch the server
@@ -631,14 +625,9 @@ class Cleantalk {
             
             // Disabling CA cert verivication
             // Disabling common name verification
-            if ($this->ssl_on && $this->ssl_path=='') {
+            if ($this->ssl_on) {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            }
-            else if ($this->ssl_on && $this->ssl_path!='') {
-            	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
-                curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
             }
 
             $result = curl_exec($ch);
@@ -709,18 +698,7 @@ class Cleantalk {
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $si=(array)json_decode($msg->sender_info,true);
-        if(defined('IN_PHPBB'))
-        {
-        	global $request;
-        	if(method_exists($request,'server'))
-        	{
-        		$si['remote_addr']=$request->server('REMOTE_ADDR');
-        	}
-        }
-        else
-        {
-        	$si['remote_addr']=$_SERVER['REMOTE_ADDR'];
-        }
+        $si['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
 				|| $this->stay_on_server == true) {
@@ -1029,7 +1007,7 @@ class Cleantalk {
         $request['method_name'] = '2s_blacklists_db'; 
         $request['auth_key'] = $api_key;
         $url='https://api.cleantalk.org';
-        $result=sendRawRequest($url,$request);
+        $result=sendRawRequest($url,$request, false, 1);
         return $result;
     }
 }
