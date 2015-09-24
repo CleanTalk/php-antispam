@@ -665,8 +665,8 @@ class Cleantalk {
                 $result = @file_get_contents($url, false, $context);
             }
         }
-
-        if (!$result) {
+        
+        if (!$result || !cleantalk_is_JSON($result)) {
             $response = null;
             $response['errno'] = 1;
             if ($curl_error) {
@@ -1166,17 +1166,24 @@ function cleantalk_get_real_ip()
 	{
 		$headers = $_SERVER;
 	}
-	if ( array_key_exists( 'X-Forwarded-For', $headers ) && filter_var( $headers['X-Forwarded-For'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) )
+	if ( array_key_exists( 'X-Forwarded-For', $headers ) )
 	{
-		$the_ip = $headers['X-Forwarded-For'];
+		$the_ip=explode(",", trim($headers['X-Forwarded-For']));
+		$the_ip = trim($the_ip[0]);
 	}
-	elseif ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ) && filter_var( $headers['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ))
+	elseif ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ))
 	{
-		$the_ip = $headers['HTTP_X_FORWARDED_FOR'];
+		$the_ip=explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
+		$the_ip = trim($the_ip[0]);
 	}
 	else
 	{
 		$the_ip = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
 	}
 	return $the_ip;
+}
+
+function cleantalk_is_JSON($string)
+{
+    return ((is_string($string) && (is_object(json_decode($string)) || is_array(json_decode($string))))) ? true : false;
 }
