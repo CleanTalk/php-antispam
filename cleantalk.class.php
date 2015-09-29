@@ -295,6 +295,9 @@ class CleantalkRequest {
      * @var int
      */
     public $submit_time = null;
+    
+    public $x_forwarded_for = '';
+    public $x_real_ip = '';
 
     /**
      * Is enable Java Script,
@@ -715,11 +718,15 @@ class Cleantalk {
         	if(method_exists($request,'server'))
         	{
         		$si['remote_addr']=$request->server('REMOTE_ADDR');
+        		$msg->x_forwarded_for=$request->server('X_FORWARDED_FOR');
+        		$msg->x_real_ip=$request->server('X_REAL_IP');
         	}
         }
         else
         {
         	$si['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        	$msg->x_forwarded_for=@$_SERVER['X_FORWARDED_FOR'];
+        	$msg->x_real_ip=@$_SERVER['X_REAL_IP'];
         }
         $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
