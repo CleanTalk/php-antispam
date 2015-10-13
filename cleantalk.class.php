@@ -376,7 +376,7 @@ class Cleantalk {
 	* Server connection timeout in seconds 
 	* @var int
 	*/
-	private $server_timeout = 3;
+	private $server_timeout = 6;
 
     /**
      * Cleantalk server url
