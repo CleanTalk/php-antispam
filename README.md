@@ -26,6 +26,8 @@ API sends a comment's text and several previous approved comments to the servers
 ```php
 <?php
 
+session_start();
+
 require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
 // Take params from config
@@ -58,6 +60,7 @@ if (count($_POST)) {
     $ct_request->sender_ip = $sender_ip; 
     $ct_request->sender_nickname = $sender_nickname; 
     $ct_request->js_on = $js_on;
+    $ct_request->submit_time = time() - (int) $_SESSION['ct_submit_time'];
 
     $ct = new Cleantalk();
     $ct->server_url = $config_url; 
@@ -71,6 +74,10 @@ if (count($_POST)) {
         echo 'User forbidden. Reason ' . $ct_result->comment;
     }
     echo '<br /><br />';
+}
+else
+{
+    $_SESSION['ct_submit_time'] = time();
 }
 ?>
 
@@ -96,6 +103,8 @@ if (count($_POST)) {
 
 ```php
 <?php
+
+session_start();
 
 require_once (dirname(__FILE__) . '/cleantalk.class.php');
 
@@ -133,7 +142,8 @@ if (count($_POST)) {
     $ct_request->sender_ip = $sender_ip; 
     $ct_request->sender_nickname = $sender_nickname; 
     $ct_request->js_on = $js_on;
-    $ct_request->message = $message; 
+    $ct_request->message = $message;
+    $ct_request->submit_time = time() - (int) $_SESSION['ct_submit_time'];
 
     $ct = new Cleantalk();
     $ct->server_url = $config_url; 
@@ -147,6 +157,10 @@ if (count($_POST)) {
         echo 'Message forbidden. Reason ' . $ct_result->comment;
     }
     echo '<br /><br />';
+}
+else
+{
+    $_SESSION['ct_submit_time'] = time();
 }
 ?>
 
