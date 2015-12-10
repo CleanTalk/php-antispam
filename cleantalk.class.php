@@ -1050,16 +1050,19 @@ class Cleantalk {
  * @return type
  */
 
-function getAutoKey($email, $host, $platform)
+if(!function_exists('getAutoKey'))
 {
-	$request=Array();
-	$request['method_name'] = 'get_api_key'; 
-	$request['email'] = $email;
-	$request['website'] = $host;
-	$request['platform'] = $platform;
-	$url='https://api.cleantalk.org';
-	$result=sendRawRequest($url,$request);
-	return $result;
+	function getAutoKey($email, $host, $platform)
+	{
+		$request=Array();
+		$request['method_name'] = 'get_api_key'; 
+		$request['email'] = $email;
+		$request['website'] = $host;
+		$request['platform'] = $platform;
+		$url='https://api.cleantalk.org';
+		$result=sendRawRequest($url,$request);
+		return $result;
+	}
 }
 
 /**
