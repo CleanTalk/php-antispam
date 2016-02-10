@@ -1098,6 +1098,7 @@ function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
 	if(!$isJSON)
 	{
 		$data=http_build_query($data);
+		$data=str_replace("&amp;", "&", $data);
 	}
 	else
 	{
