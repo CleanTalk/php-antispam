@@ -636,7 +636,15 @@ class Cleantalk {
     private function sendRequest($data = null, $url, $server_timeout = 3) {
         // Convert to array
         $data = (array)json_decode(json_encode($data), true);
-
+	
+	//Cleaning from 'null' values
+	$tmp_data = array();
+	foreach($data as $key => $value){
+		if($value !== null)
+			$tmp_data[$key] = $value;
+	}
+	$data = $tmp_data;
+	
         // Convert to JSON
         $data = json_encode($data);
         
@@ -740,7 +748,18 @@ class Cleantalk {
      */
     private function httpRequest($msg) {
         $result = false;
-        $msg->all_headers=json_encode(apache_request_headers());
+	    
+       if($msg->method_name != 'send_feedback'){
+		$ct_tmp = apache_request_headers();
+		$ct_tmp['Cookie'] = preg_replace(array(
+			//'/\s{0,1}ct_checkjs=[a-z0-9]*[;|$]{0,1}/',
+			'/\s{0,1}ct_time_zone=.{0,1}\d{1,2}[;|$]/', 
+			'/\s{0,1}ct_pointer_data=.*5D[;|$]{0,1}/', 
+			'/;{0,1}\s{0,3}$/'
+		), '', $ct_tmp['Cookie']);
+		$msg->all_headers=json_encode($ct_tmp);
+	}
+	    
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $si=(array)json_decode($msg->sender_info,true);
