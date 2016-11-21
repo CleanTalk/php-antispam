@@ -740,7 +740,16 @@ class Cleantalk {
      */
     private function httpRequest($msg) {
         $result = false;
-        $msg->all_headers=json_encode(apache_request_headers());
+	    
+	$ct_tmp = apache_request_headers();
+	$ct_tmp['Cookie'] = preg_replace(array(
+		'/\s{0,1}ct_checkjs=[a-z0-9]*[;|$]{0,1}/',
+		'/\s{0,1}ct_timezone=.{0,1}\d{1,2}[;|$]/', 
+		'/\s{0,1}ct_pointer_data=.*5D[;|$]{0,1}/', 
+		'/;{0,1}\s{0,3}$/'
+	), '', $ct_tmp['Cookie']);
+	    
+        $msg->all_headers=json_encode($ct_tmp);
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $si=(array)json_decode($msg->sender_info,true);
