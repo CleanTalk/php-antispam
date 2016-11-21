@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.1.2
+ * @version 2.1.3
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -63,6 +63,12 @@ if(!function_exists('json_decode')) {
  */
 class CleantalkResponse {
 
+    /**
+     * Received feedback nubmer
+     * @var int
+     */
+    public $received = null;
+	
     /**
      *  Is stop words
      * @var int
@@ -197,6 +203,7 @@ class CleantalkResponse {
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
+	    $this->received = (isset($obj->received)) ? $obj->received : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
                 $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***'; 
