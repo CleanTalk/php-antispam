@@ -38,27 +38,6 @@ if( !function_exists('apache_request_headers') ) {
 }
 
 /**
-* Load JSON functions if they are not exists 
-*/
-if(!function_exists('json_encode')) {
-    require_once 'JSON.php';
-
-    function json_encode($data) {
-        $json = new Services_JSON();
-        return( $json->encode($data) );
-    }
-
-}
-if(!function_exists('json_decode')) {
-    require_once 'JSON.php';
-
-    function json_decode($data) {
-        $json = new Services_JSON();
-        return( $json->decode($data) );
-    }
-}
-
-/**
  * Response class
  */
 class CleantalkResponse {
@@ -203,7 +182,7 @@ class CleantalkResponse {
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
-	    $this->received = (isset($obj->received)) ? $obj->received : -1;
+	    	$this->received = (isset($obj->received)) ? $obj->received : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
                 $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***'; 
@@ -482,7 +461,7 @@ class Cleantalk {
      * @return type
      */
     public function isAllowMessage(CleantalkRequest $request) {
-        $this->filterRequest($request);
+        $request = $this->filterRequest($request);
         $msg = $this->createMsg('check_message', $request);
         return $this->httpRequest($msg);
     }
@@ -493,7 +472,7 @@ class Cleantalk {
      * @return type
      */
     public function isAllowUser(CleantalkRequest $request) {
-        $this->filterRequest($request);
+        $request = $this->filterRequest($request);
         $msg = $this->createMsg('check_newuser', $request);
         return $this->httpRequest($msg);
     }
@@ -505,7 +484,7 @@ class Cleantalk {
      * @return type
      */
     public function sendFeedback(CleantalkRequest $request) {
-        $this->filterRequest($request);
+        $request = $this->filterRequest($request);
         $msg = $this->createMsg('send_feedback', $request);
         return $this->httpRequest($msg);
     }
@@ -515,7 +494,7 @@ class Cleantalk {
      * @param CleantalkRequest $request
      * @return type
      */
-    private function filterRequest(CleantalkRequest &$request) {
+    private function filterRequest(CleantalkRequest $request) {
         // general and optional
         foreach ($request as $param => $value) {
             if (in_array($param, array('message', 'example', 'agent',
@@ -555,6 +534,7 @@ class Cleantalk {
                 }
             }
         }
+		return $request;
     }
     
 	/**
@@ -636,14 +616,15 @@ class Cleantalk {
     private function sendRequest($data = null, $url, $server_timeout = 3) {
         // Convert to array
         $data = (array)json_decode(json_encode($data), true);
-	
-	//Cleaning from 'null' values
-	$tmp_data = array();
-	foreach($data as $key => $value){
-		if($value !== null)
-			$tmp_data[$key] = $value;
-	}
-	$data = $tmp_data;
+		
+		//Cleaning from 'null' values
+		$tmp_data = array();
+		foreach($data as $key => $value){
+			if($value !== null)
+				$tmp_data[$key] = $value;
+		}
+		$data = $tmp_data;
+		unset($key, $value, $tmp_data);
 	
         // Convert to JSON
         $data = json_encode($data);
@@ -656,7 +637,7 @@ class Cleantalk {
         if ($this->ssl_on && !preg_match("/^https:/", $url)) {
             $url = preg_replace("/^(http)/i", "$1s", $url);
         }
-
+				
         $result = false;
         $curl_error = null;
 		if(function_exists('curl_init')) {
@@ -708,7 +689,7 @@ class Cleantalk {
                 $result = @file_get_contents($url, false, $context);
             }
         }
-        
+		
         if (!$result || !cleantalk_is_JSON($result)) {
             $response = null;
             $response['errno'] = 1;
@@ -749,16 +730,24 @@ class Cleantalk {
     private function httpRequest($msg) {
         $result = false;
 	    
-       if($msg->method_name != 'send_feedback'){
-		$ct_tmp = apache_request_headers();
-		$ct_tmp['Cookie'] = preg_replace(array(
-			//'/\s{0,1}ct_checkjs=[a-z0-9]*[;|$]{0,1}/',
-			'/\s{0,1}ct_time_zone=.{0,1}\d{1,2}[;|$]/', 
-			'/\s{0,1}ct_pointer_data=.*5D[;|$]{0,1}/', 
-			'/;{0,1}\s{0,3}$/'
-		), '', $ct_tmp['Cookie']);
-		$msg->all_headers=json_encode($ct_tmp);
-	}
+		if($msg->method_name != 'send_feedback'){
+			$ct_tmp = apache_request_headers();
+			
+			if(isset($ct_tmp['Cookie']))
+				$cookie_name = 'Cookie';
+			elseif(isset($ct_tmp['cookie']))
+				$cookie_name = 'cookie';
+			else
+				$cookie_name = 'COOKIE';
+				
+			$ct_tmp[$cookie_name] = preg_replace(array(
+				'/\s{0,1}ct_checkjs=[a-z0-9]*[;|$]{0,1}/',
+				'/\s{0,1}ct_timezone=.{0,1}\d{1,2}[;|$]/', 
+				'/\s{0,1}ct_pointer_data=.*5D[;|$]{0,1}/', 
+				'/;{0,1}\s{0,3}$/'
+			), '', $ct_tmp[$cookie_name]);
+			$msg->all_headers=json_encode($ct_tmp);
+		}
 	    
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
@@ -833,9 +822,9 @@ class Cleantalk {
                 }
             }
         }
-
+				
         $response = new CleantalkResponse(null, $result);
-
+		
         if (!empty($this->data_codepage) && $this->data_codepage !== 'UTF-8') {
             if (!empty($response->comment))
             $response->comment = $this->stringFromUTF8($response->comment, $this->data_codepage);
@@ -844,7 +833,7 @@ class Cleantalk {
             if (!empty($response->sms_error_text))
             $response->sms_error_text = $this->stringFromUTF8($response->sms_error_text, $this->data_codepage);
         }
-
+		
         return $response;
     }
     
@@ -1184,8 +1173,10 @@ function sendRawRequest($url,$data,$isJSON=false,$timeout=3)
 	{
 		$opts = array(
 		    'http'=>array(
-		        'method'=>"POST",
-		        'content'=>$data)
+		        'method' => "POST",
+		        'timeout'=> $timeout,
+		        'content' => $data
+            )
 		);
 		$context = stream_context_create($opts);
 		$result = @file_get_contents($url, 0, $context);
