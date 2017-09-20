@@ -599,8 +599,10 @@ class Cleantalk {
         //
         // Removing non UTF8 characters from request, because non UTF8 or malformed characters break json_encode().
         //
-        foreach ($request as $param => $value) {
-            if (!preg_match('//u', $value)) {
+        foreach ($request as $param => $value)
+		{
+            if (!preg_match('//u', $value))
+			{
                 $request->{$param} = 'Nulled. Not UTF8 encoded or malformed.'; 
             }
         }
@@ -730,25 +732,8 @@ class Cleantalk {
     private function httpRequest($msg) {
         $result = false;
 	    
-		if($msg->method_name != 'send_feedback'){
-			$ct_tmp = apache_request_headers();
-			
-			if(isset($ct_tmp['Cookie']))
-				$cookie_name = 'Cookie';
-			elseif(isset($ct_tmp['cookie']))
-				$cookie_name = 'cookie';
-			else
-				$cookie_name = 'COOKIE';
-				
-			$ct_tmp[$cookie_name] = preg_replace(array(
-				'/\s{0,1}ct_checkjs=[a-z0-9]*[;|$]{0,1}/',
-				'/\s{0,1}ct_timezone=.{0,1}\d{1,2}[;|$]/', 
-				'/\s{0,1}ct_pointer_data=.*5D[;|$]{0,1}/', 
-				'/;{0,1}\s{0,3}$/'
-			), '', $ct_tmp[$cookie_name]);
-			$msg->all_headers=json_encode($ct_tmp);
-		}
-	    
+		$msg->all_headers = json_encode(apache_request_headers());
+		
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
         $si=(array)json_decode($msg->sender_info,true);
@@ -1037,8 +1022,10 @@ class Cleantalk {
     * param string
     * @return string
     */
-    function stringToUTF8($str, $data_codepage = null){
-        if (!preg_match('//u', $str) && function_exists('mb_detect_encoding') && function_exists('mb_convert_encoding')) {
+    function stringToUTF8($str, $data_codepage = null)
+	{
+        if (!preg_match('//u', $str) && function_exists('mb_detect_encoding') && function_exists('mb_convert_encoding'))
+		{
             
             if ($data_codepage !== null)
                 return mb_convert_encoding($str, 'UTF-8', $data_codepage);
@@ -1047,7 +1034,7 @@ class Cleantalk {
             if ($encoding)
                 return mb_convert_encoding($str, 'UTF-8', $encoding);
         }
-        
+		
         return $str;
     }
     
@@ -1057,8 +1044,10 @@ class Cleantalk {
     * param string
     * @return string
     */
-    function stringFromUTF8($str, $data_codepage = null){
-        if (preg_match('//u', $str) && function_exists('mb_convert_encoding') && $data_codepage !== null) {
+    function stringFromUTF8($str, $data_codepage = null)
+	{
+        if (preg_match('//u', $str) && function_exists('mb_convert_encoding') && $data_codepage !== null)
+		{
             return mb_convert_encoding($str, $data_codepage, 'UTF-8');
         }
         
