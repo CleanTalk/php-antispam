@@ -195,3 +195,5 @@ API returns PHP object:
   * errstr (string) - comment for error issue, errstr == null if requests successfull.
   * account_status - 0 account disabled, 1 account enabled, -1 unknown status.
   
+## Don't want to deal with all this?
+Universal solution for any CMS or custom website: https://github.com/CleanTalk/php-uni  
