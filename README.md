@@ -1,5 +1,6 @@
 php-antispam
 ============
+[![Build Status](https://travis-ci.org/CleanTalk/php-antispam.svg)](https://travis-ci.org/CleanTalk/php-antispam)
 
 [![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v/stable.svg)](https://packagist.org/packages/cleantalk/php-antispam)
 
@@ -28,7 +29,10 @@ API sends a comment's text and several previous approved comments to the servers
 
 session_start();
 
-require_once (dirname(__FILE__) . '/cleantalk.class.php');
+require_once (dirname(__FILE__) . 'autoload.php');
+
+use lib/Cleantalk;
+use lib/CleantalkRequest;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.org/api2.0/';
@@ -106,7 +110,10 @@ else
 
 session_start();
 
-require_once (dirname(__FILE__) . '/cleantalk.class.php');
+require_once (dirname(__FILE__) . 'autoload.php');
+
+use lib/Cleantalk;
+use lib/CleantalkRequest;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.org/api2.0/';

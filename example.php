@@ -1,4 +1,5 @@
 <?php
+require_once 'autoload.php';
 
 /**
  * Cleantalk example
@@ -10,7 +11,8 @@
  *
 */
 
-require_once (dirname(__FILE__) . '/cleantalk.class.php');
+use lib\CleantalkRequest;
+use lib\Cleantalk;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.ru';
