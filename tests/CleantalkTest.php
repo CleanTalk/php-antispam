@@ -1,6 +1,5 @@
 <?php
-require_once '../lib/Cleantalk.php';
-require_once '../lib/CleantalkRequest.php';
+require_once 'autoload.php';
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
@@ -46,7 +45,6 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$result = $this->ct->isAllowMessage($this->ct_request);
 		$this->assertEquals(0, $result->allow);		
 		$this->assertEquals(1, $result->stop_queue);			
-
 	}
 	
 }
