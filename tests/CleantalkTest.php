@@ -1,10 +1,11 @@
 <?php
-require_once 'autoload.php';
+require_once 'lib/Cleantalk.php';
+require_once 'lib/CleantalkRequest.php';
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
 
-define ('CLEANTALK_TEST_API_KEY', '');
+define ('CLEANTALK_TEST_API_KEY', 'ejujapepugu2');
 
 class CleantalkTest extends \PHPUnit\Framework\TestCase 
 {
@@ -45,6 +46,7 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$result = $this->ct->isAllowMessage($this->ct_request);
 		$this->assertEquals(0, $result->allow);		
 		$this->assertEquals(1, $result->stop_queue);			
+
 	}
 	
 }
