@@ -31,7 +31,7 @@ class CleantalkSFW extends CleantalkHelper
 	public function __construct()
 	{
 		$this->table_prefix = "";
-		//$this->db = \Drupal::database();
+		$this->db = null;
 	}
 	
 	public function unversal_query($query, $straight_query = false)
