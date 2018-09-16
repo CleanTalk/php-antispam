@@ -49,6 +49,26 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(0, $result->allow);		
 		$this->assertEquals(1, $result->stop_queue);			
 
+		$this->ct_request->message = '';
 	}
+
+	public function testIsAllowUser()
+	{
+		$this->ct_request->sender_email = 'good@mail.org';
+		$result = $this->ct->isAllowMessage($this->ct_request);
+		$this->assertEquals(1, $result->allow);
+
+		$this->ct_request->sender_email = 's@cleantalk.org';
+		$result = $this->ct->isAllowMessage($this->ct_request);
+		$this->assertEquals(0, $result->allow);
+	}
+
+	public function testSendFeedback()
+	{
+		$this->ct_request->feedback = '0:php-api';
+		$result = $this->ct->sendFeedback($this->ct_request);
+		$this->assertEquals('Ok.', $result->comment);
+	}
+
 	
 }
