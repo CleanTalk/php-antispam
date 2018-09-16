@@ -57,7 +57,7 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$result = $this->ct->get_servers_ip('moderate.cleantalk.org');
 		foreach ($result as $server)
 		{
-			$this->assertTrue(filter_var($server['ip'], FILTER_VALIDATE_IP));
+			$this->assertTrue(filter_var($server['ip'], FILTER_VALIDATE_IP) ? true : false);
 			$this->assertEquals('A', $server['type']);
 			$this->assertEquals('IN', $server['class']);
 		}
