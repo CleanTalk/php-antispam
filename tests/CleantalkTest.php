@@ -6,6 +6,7 @@ require_once 'lib/CleantalkResponse.php';
 use lib\Cleantalk;
 use lib\CleantalkRequest;
 use lib\CleantalkResponse;
+use lib\CleantalkHelper;
 
 define ('CLEANTALK_TEST_API_KEY', 'ejujapepugu2');
 
