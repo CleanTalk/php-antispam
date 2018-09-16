@@ -52,15 +52,22 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->ct_request->sender_email = '';
 	}
 
-	public function testGet_servers_ip()
+	public function testGetCleantalkCommentHash()
 	{
-		$result = $this->ct->get_servers_ip('moderate.cleantalk.org');
-		foreach ($result as $server)
-		{
-			$this->assertTrue(filter_var($server['ip'], FILTER_VALIDATE_IP) ? true : false);
-			$this->assertEquals('A', $server['type']);
-			$this->assertEquals('IN', $server['class']);
-		}
+		$result = $this->ct->getCleantalkCommentHash("*** Forbidden. Sender blacklisted. ***");
+		$this->assertEquals(null, $result);
+	}
+
+	public function testAddCleantalkComment()
+	{
+		$result = $this->ct->addCleantalkComment("CT", "Forbidden. Sender blacklisted.");
+		$this->assertEquals("CT\n\n*** Forbidden. Sender blacklisted. ***", $result);
+	}
+
+	public function testDelCleantalkComment()
+	{
+		$result = $this->ct->delCleantalkComment("CT\n\n*** Forbidden. Sender blacklisted. ***");
+		$this->assertEquals("CT", $result);		
 	}
 	
 }
