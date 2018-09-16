@@ -1,4 +1,4 @@
 language: php
 php:
-  - 7.1
+  - 5.6
 script: phpunit --configuration tests/phpunit.xml --coverage-text  
