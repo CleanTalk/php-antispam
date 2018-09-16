@@ -50,6 +50,7 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(1, $result->stop_queue);			
 
 		$this->ct_request->message = '';
+		$this->ct_request->sender_email = '';
 	}
 
 	public function testIsAllowUser()
@@ -61,6 +62,8 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->ct_request->sender_email = 's@cleantalk.org';
 		$result = $this->ct->isAllowMessage($this->ct_request);
 		$this->assertEquals(0, $result->allow);
+
+		$this->ct_request->sender_email = '';
 	}
 
 	public function testSendFeedback()
