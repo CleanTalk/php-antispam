@@ -56,11 +56,11 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 	public function testIsAllowUser()
 	{
 		$this->ct_request->sender_email = 'good@mail.org';
-		$result = $this->ct->isAllowMessage($this->ct_request);
+		$result = $this->ct->isAllowUser($this->ct_request);
 		$this->assertEquals(1, $result->allow);
 
 		$this->ct_request->sender_email = 's@cleantalk.org';
-		$result = $this->ct->isAllowMessage($this->ct_request);
+		$result = $this->ct->isAllowUser($this->ct_request);
 		$this->assertEquals(0, $result->allow);
 
 		$this->ct_request->sender_email = '';
