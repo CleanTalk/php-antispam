@@ -1,11 +1,10 @@
 <?php
-require_once 'lib/Cleantalk.php';
-require_once 'lib/CleantalkRequest.php';
+require_once 'autoload.php';
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
 
-define ('CLEANTALK_TEST_API_KEY', 'ejujapepugu2');
+define ('CLEANTALK_TEST_API_KEY', '');
 
 class CleantalkTest extends \PHPUnit\Framework\TestCase 
 {
