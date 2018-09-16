@@ -1,8 +1,11 @@
 <?php
-require_once 'autoload.php';
+require_once 'lib/Cleantalk.php';
+require_once 'lib/CleantalkRequest.php';
+require_once 'lib/CleantalkResponse.php';
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
+use lib\CleantalkResponse;
 
 define ('CLEANTALK_TEST_API_KEY', '');
 
