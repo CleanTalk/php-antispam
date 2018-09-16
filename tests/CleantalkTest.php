@@ -7,7 +7,7 @@ use lib\Cleantalk;
 use lib\CleantalkRequest;
 use lib\CleantalkResponse;
 
-define ('CLEANTALK_TEST_API_KEY', '');
+define ('CLEANTALK_TEST_API_KEY', 'CLEANTALK_TEST_API_KEY');
 
 class CleantalkTest extends \PHPUnit\Framework\TestCase 
 {
