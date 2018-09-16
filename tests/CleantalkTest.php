@@ -52,31 +52,16 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->ct_request->sender_email = '';
 	}
 
-	public function testSendFeedback()
+	public function testGet_servers_ip()
 	{
-		$this->ct_request->feedback = '0:php-api';
-		$result = $this->ct->sendFeedback($this->ct_request);
-		$this->assertEquals('Ok.', $result->comment);
+		$result = $this->ct->get_servers_ip('moderate.cleantalk.org');
+		$server_ips = array('159.69.51.30', '78.47.96.11', '138.68.234.8', '162.243.144.175');
+		foreach ($result as $server)
+		{
+			$this->assertTrue(in_array($server['ip'], $server_ips));
+			$this->assertEquals('A', $server['type']);
+			$this->assertEquals('IN', $server['class']);
+		}
 	}
-
-	public function testFilterRequest()
-	{
-		$this->ct_request->sender_email = 0;
-		$this->ct_request->sender_ip = 0;
-		$this->ct_request->submit_time = 'value';
-		$this->ct_request->js_on = false;
-		$result = $this->ct->filterRequest($this->ct_request);
-		$this->assertEquals(null, $result->sender_email);
-		$this->assertEquals(null, $result->sender_ip);
-		$this->assertEquals(null, $result->submit_time);
-		$this->assertEquals(null, $result->js_on);
-	}
-
-	public function testCompressData()
-	{
-		$data = $this->ct->compressData('Cleantalk');
-		$this->assertTrue(preg_match('%^[a-zA-Z0-9/+]*={0,2}$%', $data) ? true : false);
-	}
-
 	
 }
