@@ -59,5 +59,24 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals('Ok.', $result->comment);
 	}
 
+	public function testFilterRequest()
+	{
+		$this->ct_request->sender_email = 0;
+		$this->ct_request->sender_ip = 0;
+		$this->ct_request->submit_time = 'value';
+		$this->ct_request->js_on = false;
+		$result = $this->ct->filterRequest($this->ct_request);
+		$this->assertEquals(null, $result->sender_email);
+		$this->assertEquals(null, $result->sender_ip);
+		$this->assertEquals(null, $result->submit_time);
+		$this->assertEquals(null, $result->js_on);
+	}
+
+	public function testCompressData()
+	{
+		$data = $this->ct->compressData('Cleantalk');
+		$this->assertTrue(preg_match('%^[a-zA-Z0-9/+]*={0,2}$%', $data) ? true : false);
+	}
+
 	
 }
