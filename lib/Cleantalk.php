@@ -414,7 +414,7 @@ class Cleantalk
         
         $si=(array)json_decode($msg->sender_info,true);
 
-        $si['remote_addr'] = $_SERVER['REMOTE_ADDR'];
+        if(isset($_SERVER['REMOTE_ADDR']))     $si['remote_addr'] = $_SERVER['REMOTE_ADDR'];
         if(isset($_SERVER['X_FORWARDED_FOR'])) $msg->x_forwarded_for = $_SERVER['X_FORWARDED_FOR'];
         if(isset($_SERVER['X_REAL_IP']))       $msg->x_real_ip       = $_SERVER['X_REAL_IP'];
         
