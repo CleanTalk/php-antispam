@@ -1,5 +1,9 @@
 <?php
+namespace lib;
 
+/**
+ * CLeantalk helper class
+ */
 class CleantalkHelper
 {	
 	private $cdn_pool = array(

@@ -1,4 +1,5 @@
 <?php
+namespace lib;
 
 /*
  * CleanTalk SpamFireWall base class

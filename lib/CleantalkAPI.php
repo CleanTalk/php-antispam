@@ -1,5 +1,9 @@
 <?php
+namespace lib;
 
+/**
+ * CLeantalk API calls class
+ */
 class CleantalkAPI
 {
 	const URL = 'https://api.cleantalk.org';

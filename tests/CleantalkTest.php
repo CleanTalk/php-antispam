@@ -2,10 +2,12 @@
 require_once 'lib/Cleantalk.php';
 require_once 'lib/CleantalkRequest.php';
 require_once 'lib/CleantalkResponse.php';
+require_once 'lib/CleantalkHelper.php';
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
 use lib\CleantalkResponse;
+use lib\CleantalkHelper;
 
 define ('CLEANTALK_TEST_API_KEY', 'ejujapepugu2');
 
