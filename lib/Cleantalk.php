@@ -442,7 +442,7 @@ class Cleantalk {
      * @param $host
      * @return array
      */
-    public function get_servers_ip($host)
+    private function get_servers_ip($host)
 	{		
         if (!isset($host))
             return null;
@@ -516,7 +516,7 @@ class Cleantalk {
     * param string
     * @return int
     */
-    function httpPing($host){
+    private function httpPing($host){
 
         // Skip localhost ping cause it raise error at fsockopen.
         // And return minimun value 

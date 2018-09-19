@@ -30,9 +30,8 @@ class CleantalkSFW
 	
 	public function __construct()
 	{
-		global $wpdb;
-		$this->table_prefix = $wpdb->base_prefix;
-		$this->db = $wpdb;
+		$this->table_prefix = "";
+		$this->db = $db;
 	}
 	
 	public function unversal_query($query, $straight_query = false)
