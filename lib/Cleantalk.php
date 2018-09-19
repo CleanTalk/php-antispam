@@ -350,7 +350,7 @@ class Cleantalk {
 		// Wiping cleantalk's headers but, not for send_feedback
 		if($msg->method_name != 'send_feedback'){
 			
-			$ct_tmp = apache_request_headers();
+			$ct_tmp = function_exists('apache_request_headers') ? apache_request_headers() : CleantalkHelper::apache_request_headers();
 			
 			if(isset($ct_tmp['Cookie']))
 				$cookie_name = 'Cookie';
