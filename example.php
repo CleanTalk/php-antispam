@@ -13,6 +13,7 @@ require_once 'autoload.php';
 
 use lib\CleantalkRequest;
 use lib\Cleantalk;
+use lib\CleantalkAPI;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.ru';
@@ -43,5 +44,6 @@ if ($ct_result->allow == 1) {
 } else {
     echo 'Comment blocked. Reason ' . $ct_result->comment;
 }
-
+echo "<br/>CleantalkAPI call example:<br/>";
+var_dump(CleantalkAPI::notice_validate_key('',''));
 ?>

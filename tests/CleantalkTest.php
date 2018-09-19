@@ -2,7 +2,6 @@
 require_once 'lib/Cleantalk.php';
 require_once 'lib/CleantalkRequest.php';
 require_once 'lib/CleantalkResponse.php';
-require_once 'lib/CleantalkHelper.php';
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
@@ -52,24 +51,5 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(0, $result->allow);
 
 		$this->ct_request->sender_email = '';
-	}
-
-	public function testGetCleantalkCommentHash()
-	{
-		$result = $this->ct->getCleantalkCommentHash("*** Forbidden. Sender blacklisted. ***");
-		$this->assertEquals(null, $result);
-	}
-
-	public function testAddCleantalkComment()
-	{
-		$result = $this->ct->addCleantalkComment("CT", "Forbidden. Sender blacklisted.");
-		$this->assertEquals("CT\n\n*** Forbidden. Sender blacklisted. ***", $result);
-	}
-
-	public function testDelCleantalkComment()
-	{
-		$result = $this->ct->delCleantalkComment("CT\n\n*** Forbidden. Sender blacklisted. ***");
-		$this->assertEquals("CT", $result);		
-	}
-	
+	}	
 }

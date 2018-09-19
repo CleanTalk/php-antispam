@@ -108,6 +108,54 @@ class Cleantalk
     public $min_server_timeout = 50;
 
     /**
+     * CDN IP's pool
+     *
+     */
+    private $cdn_pool = array(
+        'cloud_flare' => array(
+            'ipv4' => array(
+                '103.21.244.0/22',
+                '103.22.200.0/22',
+                '103.31.4.0/22',
+                '104.16.0.0/12',
+                '108.162.192.0/18',
+                '131.0.72.0/22',
+                '141.101.64.0/18',
+                '162.158.0.0/15',
+                '172.64.0.0/13',
+                '173.245.48.0/20',
+                '185.93.231.18/20', // User fix
+                '185.220.101.46/20', // User fix
+                '188.114.96.0/20',
+                '190.93.240.0/20',
+                '197.234.240.0/22',
+                '198.41.128.0/17',
+            ),
+            'ipv6' => array(
+                '2400:cb00::/32',
+                '2405:8100::/32',
+                '2405:b500::/32',
+                '2606:4700::/32',
+                '2803:f800::/32',
+                '2c0f:f248::/32',
+                '2a06:98c0::/29',
+            ),
+        ),
+    );
+
+    /**
+     * Private networks IP's pool
+     *
+     */    
+    private $private_networks = array(
+        '10.0.0.0/8',
+        '100.64.0.0/10',
+        '172.16.0.0/12',
+        '192.168.0.0/16',
+        '127.0.0.1/32',
+    ); 
+
+    /**
      * Function checks whether it is possible to publish the message
      * @param CleantalkRequest $request
      * @return type
@@ -264,7 +312,7 @@ class Cleantalk
      * @param $msg
      * @return boolean|\CleantalkResponse
      */
-    private function sendRequest($data = null, $url, $server_timeout = 3) {
+    protected static function sendRequest($data = null, $url, $moderate = true, $server_timeout = 3) {
         // Convert to array
         $data = (array)json_decode(json_encode($data), true);
         
@@ -281,16 +329,14 @@ class Cleantalk
         $data = $tmp_data;
         unset($key, $value, $tmp_data);
         
-        // Convert to JSON
-        $data = json_encode($data);
-        
-        if (isset($this->api_version)) {
-            $url = $url . $this->api_version;
+        if ($moderate){
+            $url = $url . '/api2.0'; 
+            $data = json_encode($data);            
         }
-        
-        // Switching to secure connection
-        if ($this->ssl_on && !preg_match("/^https:/", $url)) {
-            $url = preg_replace("/^(http)/i", "$1s", $url);
+        else
+        {
+            $data = http_build_query($data);
+            $data = str_replace("&amp;", "&", $data);
         }
         
         $result = false;
@@ -310,25 +356,12 @@ class Cleantalk
             
             // Disabling CA cert verivication
             // Disabling common name verification
-            if ($this->ssl_on && $this->ssl_path=='') {
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-            }
-            else if ($this->ssl_on && $this->ssl_path!='') {
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-                curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
-            }
-
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            
             $result = curl_exec($ch);
-            if (!$result) {
+            if (!$result)
                 $curl_error = curl_error($ch);
-                // Use SSL next time, if error occurs.
-                if(!$this->ssl_on){
-                    $this->ssl_on = true;
-                    return $this->sendRequest($original_data, $original_url, $server_timeout);
-                }
-            }
             
             curl_close($ch); 
         }
@@ -350,15 +383,7 @@ class Cleantalk
             }
         }
         
-        if (!$result || !$this->cleantalk_is_JSON($result)) {
-            $response = null;
-            $response['errno'] = 1;
-            $response['errstr'] = true;
-            $response['curl_err'] = isset($curl_error) ? $curl_error : false;
-            $response = json_decode(json_encode($response));
-            
-            return $response;
-        }
+
         
         $errstr = null;
         $response = json_decode($result);
@@ -390,7 +415,7 @@ class Cleantalk
         if($msg->method_name != 'send_feedback'){
             $tmp = function_exists('apache_request_headers')
                 ? apache_request_headers()
-                : CleantalkHelper::apache_request_headers();
+                : $this->apache_request_headers();
             
             if(isset($tmp['Cookie'])){
                 $cookie_name = 'Cookie';
@@ -414,10 +439,10 @@ class Cleantalk
         
         $si=(array)json_decode($msg->sender_info,true);
 
-        if(isset($_SERVER['REMOTE_ADDR']))     $si['remote_addr'] = $_SERVER['REMOTE_ADDR'];
-        if(isset($_SERVER['X_FORWARDED_FOR'])) $msg->x_forwarded_for = $_SERVER['X_FORWARDED_FOR'];
-        if(isset($_SERVER['X_REAL_IP']))       $msg->x_real_ip       = $_SERVER['X_REAL_IP'];
-        
+        $msg->sender_ip = $this->ip_get(array('real'), false);
+        $msg->x_forwarded_for = $this->ip_get(array('x_forwarded_for'), false);
+        $msg->x_real_ip = $this->ip_get(array('x_real_ip'), false);
+
         $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
                 || $this->stay_on_server == true) {
@@ -562,48 +587,6 @@ class Cleantalk
 
         return $response;
     }
-
-    /**
-     * Function to get the message hash from Cleantalk.ru comment
-     * @param $message
-     * @return null
-     */
-    public function getCleantalkCommentHash($message) {
-        $matches = array();
-        if (preg_match('/\n\n\*\*\*.+([a-z0-9]{32}).+\*\*\*$/', $message, $matches))
-            return $matches[1];
-        else if (preg_match('/\<br.*\>[\n]{0,1}\<br.*\>[\n]{0,1}\*\*\*.+([a-z0-9]{32}).+\*\*\*$/', $message, $matches))
-            return $matches[1];
-
-        return NULL;
-    }
-
-    /**
-     * Function adds to the post comment Cleantalk.ru
-     * @param $message
-     * @param $comment
-     * @return string
-     */
-    public function addCleantalkComment($message, $comment) {
-        $comment = preg_match('/\*\*\*(.+)\*\*\*/', $comment, $matches) ? $comment : '*** ' . $comment . ' ***';
-        return $message . "\n\n" . $comment;
-    }
-
-    /**
-     * Function deletes the comment Cleantalk.ru
-     * @param $message
-     * @return mixed
-     */
-    public function delCleantalkComment($message) {
-        $message = preg_replace('/\n\n\*\*\*.+\*\*\*$/', '', $message);
-
-        // DLE sign cut
-        $message = preg_replace('/<br\s?\/><br\s?\/>\*\*\*.+\*\*\*$/', '', $message);
-
-        $message = preg_replace('/\<br.*\>[\n]{0,1}\<br.*\>[\n]{0,1}\*\*\*.+\*\*\*$/', '', $message);
-        
-        return $message;
-    }
     
     /**
     * Function to check response time
@@ -667,9 +650,153 @@ class Cleantalk
         
         return $str;
     }
-    
+
+    /*
+     * Check if the IP belong to mask. Recursivly if array given
+     * @param ip string  
+     * @param cird mixed (string|array of strings)
+    */
+    private function ip_mask_match($ip, $cidr){
+        if(is_array($cidr)){
+            foreach($cidr as $curr_mask){
+                if($this->ip_mask_match($ip, $curr_mask)){
+                    return true;
+                }
+            } unset($curr_mask);
+            return false;
+        }
+        $exploded = explode ('/', $cidr);
+        $net = $exploded[0];
+        $mask = 4294967295 << (32 - $exploded[1]);
+        return (ip2long($ip) & $mask) == (ip2long($net) & $mask);
+    }
+
+    /*
+    *   Validating IPv4, IPv6
+    *   param (string) $ip
+    *   returns (string) 'v4' || (string) 'v6' || (bool) false
+    */
+    private function ip_validate($ip)
+    {
+        if(!$ip)                                                  return false; // NULL || FALSE || '' || so on...
+        if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) return 'v4';  // IPv4
+        if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) return 'v6';  // IPv6
+                                                                  return false; // Unknown
+    }
+
+    /* 
+     * If Apache web server is missing then making
+     * Patch for apache_request_headers() 
+     */
+    private function apache_request_headers(){
+        
+        $headers = array(); 
+        foreach($_SERVER as $key => $val){
+            if(preg_match('/\AHTTP_/', $key)){
+                $server_key = preg_replace('/\AHTTP_/', '', $key);
+                $key_parts = explode('_', $server_key);
+                if(count($key_parts) > 0 and strlen($server_key) > 2){
+                    foreach($key_parts as $part_index => $part){
+                        $key_parts[$part_index] = mb_strtolower($part);
+                        $key_parts[$part_index][0] = strtoupper($key_parts[$part_index][0]);                    
+                    }
+                    $server_key = implode('-', $key_parts);
+                }
+                $headers[$server_key] = $val;
+            }
+        }
+        return $headers;
+    }
+
     private function cleantalk_is_JSON($string){
         return ((is_string($string) && (is_object(json_decode($string)) || is_array(json_decode($string))))) ? true : false;
     }
-    
+    /*
+    *   Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
+    *   reutrns array('remote_addr' => 'val', ['x_forwarded_for' => 'val', ['x_real_ip' => 'val', ['cloud_flare' => 'val']]])
+    */
+    private function ip_get($ips_input = array('real', 'remote_addr', 'x_forwarded_for', 'x_real_ip', 'cloud_flare'), $v4_only = true)
+    {
+        $ips = array();
+        foreach($ips_input as $ip_type){
+            $ips[$ip_type] = '';
+        } unset($ip_type);
+                
+        $headers = function_exists('apache_request_headers') ? apache_request_headers() : $this->apache_request_headers();
+        
+        // REMOTE_ADDR
+        if(isset($ips['remote_addr'])){
+            $ips['remote_addr'] = $_SERVER['REMOTE_ADDR'];
+        }
+        
+        // X-Forwarded-For
+        if(isset($ips['x_forwarded_for'])){
+            if(isset($headers['X-Forwarded-For'])){
+                $tmp = explode(",", trim($headers['X-Forwarded-For']));
+                $ips['x_forwarded_for']= trim($tmp[0]);
+            }
+        }
+        
+        // X-Real-Ip
+        if(isset($ips['x_real_ip'])){
+            if(isset($headers['X-Real-Ip'])){
+                $tmp = explode(",", trim($headers['X-Real-Ip']));
+                $ips['x_real_ip']= trim($tmp[0]);
+            }
+        }
+        
+        // Cloud Flare
+        if(isset($ips['cloud_flare'])){
+            if(isset($headers['Cf-Connecting-Ip'])){
+                if($this->ip_mask_match($ips['remote_addr'], $this->cdn_pool['cloud_flare']['ipv4'])){
+                    $ips['cloud_flare'] = $headers['Cf-Connecting-Ip'];
+                }
+            }
+        }
+        
+        // Getting real IP from REMOTE_ADDR or Cf_Connecting_Ip if set or from (X-Forwarded-For, X-Real-Ip) if REMOTE_ADDR is local.
+        if(isset($ips['real'])){
+            
+            $ips['real'] = $_SERVER['REMOTE_ADDR'];
+            
+            // Cloud Flare
+            if(isset($headers['Cf-Connecting-Ip'])){
+                if($this->ip_mask_match($ips['real'], $this->cdn_pool['cloud_flare']['ipv4'])){
+                    $ips['real'] = $headers['Cf-Connecting-Ip'];
+                }
+            // Incapsula proxy
+            }elseif(isset($headers['Incap-Client-Ip'])){
+                $ips['real'] = $headers['Incap-Client-Ip'];
+            // Private networks. Looking for X-Forwarded-For and X-Real-Ip
+            }elseif($this->ip_mask_match($ips['real'], $this->private_networks)){
+                if(isset($headers['X-Forwarded-For'])){
+                    $tmp = explode(",", trim($headers['X-Forwarded-For']));
+                    $ips['real']= trim($tmp[0]);
+                }elseif(isset($headers['X-Real-Ip'])){
+                    $tmp = explode(",", trim($headers['X-Real-Ip']));
+                    $ips['real']= trim($tmp[0]);
+                }
+            }
+        }
+        
+        // Validating IPs
+        $result = array();
+        foreach($ips as $key => $ip){
+            if($v4_only){
+                if($this->ip_validate($ip) == 'v4')
+                    $result[$key] = $ip;
+            }else{
+                if($this->ip_validate($ip))
+                    $result[$key] = $ip;
+            }
+        }
+        
+        $result = array_unique($result);
+        
+        return count($ips_input) > 1 
+            ? $result 
+            : (reset($result) !== false
+                ? reset($result)
+                : null);
+    }        
 }
