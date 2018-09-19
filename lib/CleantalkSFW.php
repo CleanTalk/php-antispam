@@ -1,9 +1,9 @@
 <?php
-namespace lib;
 
 /*
  * CleanTalk SpamFireWall base class
  * Compatible only with Wordpress.
+ * @depends on CleantalkHelper class
  * Version 2.0-wp
  * author Cleantalk team (welcome@cleantalk.org)
  * copyright (C) 2014 CleanTalk team (http://cleantalk.org)
@@ -11,7 +11,7 @@ namespace lib;
  * see https://github.com/CleanTalk/php-antispam
 */
 
-class CleantalkSFW extends CleantalkHelper
+class CleantalkSFW
 {
 	public $ip = 0;
 	public $ip_str = '';
@@ -30,30 +30,28 @@ class CleantalkSFW extends CleantalkHelper
 	
 	public function __construct()
 	{
-		$this->table_prefix = "";
-		$this->db = null;
+		global $wpdb;
+		$this->table_prefix = $wpdb->base_prefix;
+		$this->db = $wpdb;
 	}
 	
 	public function unversal_query($query, $straight_query = false)
 	{
 		if($straight_query)
-			$this->db_result = db_query($query);
+			$this->db_result = $this->db->query($query);
 		else
 			$this->query = $query;
 	}
 	
 	public function unversal_fetch()
 	{
-		$this->db_result_data = $this->db_result->fetchAssoc();
+		$this->db_result_data = $this->db->get_row($this->query, ARRAY_A);
 	}
 	
 	public function unversal_fetch_all()
 	{
-		while ($row = $this->db_result->fetchAssoc()){
-			$this->db_result_data[] = $row;
-		}
+		$this->db_result_data = $this->db->get_results($this->query, ARRAY_A);
 	}
-	
 	
 	/*
 	*	Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
@@ -61,12 +59,12 @@ class CleantalkSFW extends CleantalkHelper
 	*/
 	static public function ip_get($ips_input = array('real', 'remote_addr', 'x_forwarded_for', 'x_real_ip', 'cloud_flare'), $v4_only = true){
 		
-		$result = (array)parent::ip_get($ips_input, $v4_only);
+		$result = (array)CleantalkHelper::ip_get($ips_input, $v4_only);
 		
 		$result = !empty($result) ? $result : array();
 		
 		if(isset($_GET['sfw_test_ip'])){
-			if(self::ip_validate($_GET['sfw_test_ip']) !== false)
+			if(CleantalkHelper::ip_validate($_GET['sfw_test_ip']) !== false)
 				$result['sfw_test'] = $_GET['sfw_test_ip'];
 		}
 		
@@ -83,9 +81,9 @@ class CleantalkSFW extends CleantalkHelper
 		
 			$query = "SELECT 
 				COUNT(network) AS cnt
-				FROM {".$this->table_prefix."cleantalk_sfw}
-				WHERE network = ".sprintf("%u", ip2long($current_ip))." & mask";
-			$this->unversal_query($query,true);
+				FROM ".$this->table_prefix."cleantalk_sfw
+				WHERE network = ".sprintf("%u", ip2long($current_ip))." & mask;";
+			$this->unversal_query($query);
 			$this->unversal_fetch();
 			
 			if($this->db_result_data['cnt']){
@@ -109,7 +107,7 @@ class CleantalkSFW extends CleantalkHelper
 		$blocked = ($result == 'blocked' ? ' + 1' : '');
 		$time = time();
 
-		$query = "INSERT INTO {".$this->table_prefix."cleantalk_sfw_logs}
+		$query = "INSERT INTO ".$this->table_prefix."cleantalk_sfw_logs
 		SET 
 			ip = '$ip',
 			all_entries = 1,
@@ -121,7 +119,7 @@ class CleantalkSFW extends CleantalkHelper
 			blocked_entries = blocked_entries".strval($blocked).",
 			entries_timestamp = '".intval($time)."'";
 
-		$this->unversal_query($query,true);
+		$this->unversal_query($query, true);
 	}
 	
 	/*
@@ -131,11 +129,11 @@ class CleantalkSFW extends CleantalkHelper
 	*/
 	public function sfw_update($ct_key){
 		
-		$result = self::api_method__get_2s_blacklists_db($ct_key);
+		$result = CleantalkAPI::api_method__get_2s_blacklists_db($ct_key);
 		
 		if(empty($result['error'])){
 			
-			$this->unversal_query("TRUNCATE TABLE {".$this->table_prefix."cleantalk_sfw}",true);
+			$this->unversal_query("DELETE FROM ".$this->table_prefix."cleantalk_sfw;", true);
 						
 			// Cast result to int
 			foreach($result as $value){
@@ -143,7 +141,7 @@ class CleantalkSFW extends CleantalkHelper
 				$value[1] = intval($value[1]);
 			} unset($value);
 			
-			$query="INSERT INTO {".$this->table_prefix."cleantalk_sfw} VALUES ";
+			$query="INSERT INTO ".$this->table_prefix."cleantalk_sfw VALUES ";
 			for($i=0, $arr_count = count($result); $i < $arr_count; $i++){
 				if($i == count($result)-1){
 					$query.="(".$result[$i][0].",".$result[$i][1].");";
@@ -151,7 +149,7 @@ class CleantalkSFW extends CleantalkHelper
 					$query.="(".$result[$i][0].",".$result[$i][1]."), ";
 				}
 			}
-			$this->unversal_query($query,true);
+			$this->unversal_query($query, true);
 			
 			return true;
 			
@@ -168,8 +166,8 @@ class CleantalkSFW extends CleantalkHelper
 	public function send_logs($ct_key){
 		
 		//Getting logs
-		$query = "SELECT * FROM {".$this->table_prefix."cleantalk_sfw_logs}";
-		$this->unversal_query($query,true);
+		$query = "SELECT * FROM ".$this->table_prefix."cleantalk_sfw_logs";
+		$this->unversal_query($query);
 		$this->unversal_fetch_all();
 		
 		if(count($this->db_result_data)){
@@ -182,12 +180,12 @@ class CleantalkSFW extends CleantalkHelper
 			unset($key, $value);
 			
 			//Sending the request
-			$result = self::api_method__sfw_logs($ct_key, $data);
+			$result = CleantalkAPI::api_method__sfw_logs($ct_key, $data);
 			
 			//Checking answer and deleting all lines from the table
 			if(empty($result['error'])){
 				if($result['rows'] == count($data)){
-					$this->unversal_query("TRUNCATE TABLE {".$this->table_prefix."cleantalk_sfw_logs}",true);
+					$this->unversal_query("DELETE FROM ".$this->table_prefix."cleantalk_sfw_logs", true);
 					return true;
 				}
 			}else{
@@ -207,15 +205,25 @@ class CleantalkSFW extends CleantalkHelper
 	public function sfw_die($api_key, $cookie_prefix = '', $cookie_domain = ''){
 		
 		// File exists?
-		if(file_exists(dirname(__FILE__)."/sfw_die_page.html")){
-			$sfw_die_page = file_get_contents(dirname(__FILE__)."/sfw_die_page.html");
+		if(file_exists(CLEANTALK_PLUGIN_DIR . "inc/sfw_die_page.html")){
+			$sfw_die_page = file_get_contents(CLEANTALK_PLUGIN_DIR . "inc/sfw_die_page.html");
 		}else{
-			die("IP BLACKLISTED");
+			wp_die("IP BLACKLISTED", "Blacklisted", Array('response'=>403), true);
 		}
+		
+		// Translation
+		$request_uri = $_SERVER['REQUEST_URI'];
+		$sfw_die_page = str_replace('{SFW_DIE_NOTICE_IP}',              __('SpamFireWall is activated for your IP ', 'cleantalk'), $sfw_die_page);
+		$sfw_die_page = str_replace('{SFW_DIE_MAKE_SURE_JS_ENABLED}',   __('To continue working with web site, please make sure that you have enabled JavaScript.', 'cleantalk'), $sfw_die_page);
+		$sfw_die_page = str_replace('{SFW_DIE_CLICK_TO_PASS}',          __('Please click below to pass protection,', 'cleantalk'), $sfw_die_page);
+		$sfw_die_page = str_replace('{SFW_DIE_YOU_WILL_BE_REDIRECTED}', sprintf(__('Or you will be automatically redirected to the requested page after %d seconds.', 'cleantalk'), 1), $sfw_die_page);
+		$sfw_die_page = str_replace('{CLEANTALK_TITLE}',                __('Antispam by CleanTalk', 'cleantalk'), $sfw_die_page);
 		
 		// Service info
 		$sfw_die_page = str_replace('{REMOTE_ADDRESS}', $this->blocked_ip, $sfw_die_page);
-		$sfw_die_page = str_replace('{REQUEST_URI}', $_SERVER['REQUEST_URI'], $sfw_die_page);
+		$sfw_die_page = str_replace('{REQUEST_URI}', $request_uri, $sfw_die_page);
+		$sfw_die_page = str_replace('{COOKIE_PREFIX}', $cookie_prefix, $sfw_die_page);
+		$sfw_die_page = str_replace('{COOKIE_DOMAIN}', $cookie_domain, $sfw_die_page);
 		$sfw_die_page = str_replace('{SFW_COOKIE}', md5($this->blocked_ip.$api_key), $sfw_die_page);
 		
 		// Headers
@@ -230,7 +238,7 @@ class CleantalkSFW extends CleantalkHelper
 			$sfw_die_page = str_replace('{GENERATED}', "<h2 class='second'>The page was generated at&nbsp;".date("D, d M Y H:i:s")."</h2>",$sfw_die_page);
 		}
 		
-		die($sfw_die_page);
+		wp_die($sfw_die_page, "Blacklisted", Array('response'=>403));
 		
 	}
 }

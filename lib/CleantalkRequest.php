@@ -1,5 +1,4 @@
 <?php
-namespace lib;
 
 /**
  * Request class

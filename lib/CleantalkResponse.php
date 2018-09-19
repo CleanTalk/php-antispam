@@ -1,11 +1,16 @@
 <?php
-namespace lib;
 
 /**
  * Response class
  */
 class CleantalkResponse {
 
+    /**
+     * Received feedback nubmer
+     * @var int
+     */
+    public $received = null;
+	
     /**
      *  Is stop words
      * @var int
@@ -140,10 +145,10 @@ class CleantalkResponse {
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
+			$this->received = (isset($obj->received)) ? $obj->received : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
                 $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***'; 
         }
     }
-
 }
