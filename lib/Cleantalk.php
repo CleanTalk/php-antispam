@@ -84,12 +84,6 @@ class Cleantalk
     public $data_codepage = null;
     
     /**
-     * API version to use 
-     * @var string
-     */
-    public $api_version = '/api2.0';
-    
-    /**
      * Use https connection to servers 
      * @var bool 
      */
@@ -726,7 +720,7 @@ class Cleantalk
         
         // REMOTE_ADDR
         if(isset($ips['remote_addr'])){
-            $ips['remote_addr'] = $_SERVER['REMOTE_ADDR'];
+            $ips['remote_addr'] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
         }
         
         // X-Forwarded-For
@@ -757,7 +751,7 @@ class Cleantalk
         // Getting real IP from REMOTE_ADDR or Cf_Connecting_Ip if set or from (X-Forwarded-For, X-Real-Ip) if REMOTE_ADDR is local.
         if(isset($ips['real'])){
             
-            $ips['real'] = $_SERVER['REMOTE_ADDR'];
+            $ips['real'] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
             
             // Cloud Flare
             if(isset($headers['Cf-Connecting-Ip'])){
