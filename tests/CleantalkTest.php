@@ -10,8 +10,6 @@ use lib\CleantalkRequest;
 use lib\CleantalkResponse;
 use lib\CleantalkHelper;
 
-define ('CLEANTALK_TEST_API_KEY', 'ejujapepugu2');
-
 class CleantalkTest extends \PHPUnit\Framework\TestCase 
 {
 	protected $ct;
