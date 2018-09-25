@@ -1,5 +1,4 @@
 <?php
-namespace lib;
 
 /**
  * CLeantalk API calls class
