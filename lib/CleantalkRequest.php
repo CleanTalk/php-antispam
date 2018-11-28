@@ -1,5 +1,4 @@
 <?php
-namespace lib;
 
 /**
  * Request class
@@ -123,10 +122,10 @@ class CleantalkRequest {
     /**
      * Is enable Java Script,
      * valid are 0|1|2
-     * Status:
-     *  null - JS html code not inserted into phpBB templates
-     *  0 - JS disabled at the client browser
-     *  1 - JS enabled at the client broswer
+	 * Status:
+	 *  null - JS html code not inserted into phpBB templates
+	 *  0 - JS disabled at the client browser
+	 *  1 - JS enabled at the client broswer
      * @var int
      */
     public $js_on = null;

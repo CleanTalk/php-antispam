@@ -1,11 +1,10 @@
 <?php
-namespace lib;
 
 /**
  * Cleantalk class create request
  */
 class Cleantalk {
-	
+
     /**
 	* Maximum data size in bytes
 	* @var int
@@ -53,9 +52,9 @@ class Cleantalk {
      * @var bool
      */
     public $server_change = false;
-	
+
     /**
-	 * Codepage of the data 
+     * Codepage of the data 
      * @var bool
      */
     public $data_codepage = null;
@@ -84,7 +83,7 @@ class Cleantalk {
      */
     public $min_server_timeout = 50;
 	
-	/**
+    /**
      * Maximal server response in miliseconds to catch the server
      *
      */
@@ -187,8 +186,8 @@ class Cleantalk {
         switch ($method) {
             case 'check_message':
                 // Convert strings to UTF8
-                $request->message         = CleantalkHelper::stringToUTF8($request->message,         $this->data_codepage);
-                $request->example         = CleantalkHelper::stringToUTF8($request->example,         $this->data_codepage);
+                $request->message         = CleantalkHelper::arrayToUTF8( $request->message,         $this->data_codepage);
+                $request->example         = CleantalkHelper::arrayToUTF8( $request->example,         $this->data_codepage);
                 $request->sender_email    = CleantalkHelper::stringToUTF8($request->sender_email,    $this->data_codepage);
                 $request->sender_nickname = CleantalkHelper::stringToUTF8($request->sender_nickname, $this->data_codepage);
 
@@ -218,7 +217,10 @@ class Cleantalk {
 			if(is_string($request->$param) || is_int($request->$param))
 				$request->$param = CleantalkHelper::removeNonUTF8FromString($value);
         }
-	
+		
+		$request->message = unserialize($request->message);
+		$request->message = is_array($request->message) ? json_encode($request->message) : $request->message;
+		
         return $request;
     }
     
@@ -356,60 +358,58 @@ class Cleantalk {
 			else
 				$cookie_name = 'COOKIE';
 			
-			if(isset($tmp[$cookie_name]))
-                $ct_tmp[$cookie_name] = preg_replace(
-                    array(
-    				'/\s?ct_checkjs=[a-z0-9]*[^;]*;?/',
-    				'/\s?ct_timezone=.{0,1}\d{1,2}[^;]*;?/', 
-    				'/\s?ct_pointer_data=.*5D[^;]*;?/', 
-    				'/\s?apbct_timestamp=\d*[^;]*;?/',
-    				'/\s?apbct_site_landing_ts=\d*[^;]*;?/',
-    				'/\s?apbct_cookies_test=%7B.*%7D[^;]*;?/',
-    				'/\s?apbct_prev_referer=http.*?[^;]*;?/',
-    				'/\s?ct_cookies_test=.*?[^;]*;?/',
-    				'/\s?ct_ps_timestamp=.*?[^;]*;?/',
-    				'/\s?ct_fkp_timestamp=\d*?[^;]*;?/',
-    				'/\s?ct_sfw_pass_key=\d*?[^;]*;?/',
-    				'/\s?apbct_page_hits=\d*?[^;]*;?/',
-    				'/\s?apbct_visible_fields_count=\d*?[^;]*;?/',
-    				'/\s?apbct_visible_fields=%7B.*%7D[^;]*;?/',
-			        ), '', $ct_tmp[$cookie_name]);
+			$ct_tmp[$cookie_name] = preg_replace(array(
+				'/\s?ct_checkjs=[a-z0-9]*[^;]*;?/',
+				'/\s?ct_timezone=.{0,1}\d{1,2}[^;]*;?/', 
+				'/\s?ct_pointer_data=.*5D[^;]*;?/', 
+				'/\s?apbct_timestamp=\d*[^;]*;?/',
+				'/\s?apbct_site_landing_ts=\d*[^;]*;?/',
+				'/\s?apbct_cookies_test=%7B.*%7D[^;]*;?/',
+				'/\s?apbct_prev_referer=http.*?[^;]*;?/',
+				'/\s?ct_cookies_test=.*?[^;]*;?/',
+				'/\s?ct_ps_timestamp=.*?[^;]*;?/',
+				'/\s?ct_fkp_timestamp=\d*?[^;]*;?/',
+				'/\s?ct_sfw_pass_key=\d*?[^;]*;?/',
+				'/\s?apbct_page_hits=\d*?[^;]*;?/',
+				'/\s?apbct_visible_fields_count=\d*?[^;]*;?/',
+				'/\s?apbct_visible_fields=%7B.*%7D[^;]*;?/',
+			), '', $ct_tmp[$cookie_name]);
 			$msg->all_headers = $ct_tmp;
 		}
-		
+				
 		$msg->all_headers = json_encode($msg->all_headers);
-		
+				
 		// Using current server without changing it
         if (false && (!empty($this->work_url) && ($this->server_changed + $this->server_ttl > time()))){
-			
+	        
             $url = !empty($this->work_url) ? $this->work_url : $this->server_url;
             $result = $this->sendRequest($msg, $url, $this->server_timeout);
 			
         }else{
 			$result = false;
-		}
-		
+        }
+
 		// Changing server
         if (true || ($result === false || $result->errno != 0)) {
 			
             // Split server url to parts
             preg_match("@^(https?://)([^/:]+)(.*)@i", $this->server_url, $matches);
-			
+            
             $url_prefix = isset($matches[1]) ? $matches[1] : '';
             $url_host   = isset($matches[2]) ? $matches[2] : '';
             $url_suffix = isset($matches[3]) ? $matches[3] : '';
             
             if (empty($url_host)){
-				
+
                 return false;
 				
-            }else{
+            } else {
 				
 				$servers = $this->get_servers_ip($url_host);
 				
                 // Loop until find work server
                 foreach ($servers as $server) {
-					
+                    
                     $this->work_url = $url_prefix . $server['ip'] . $url_suffix;
                     $this->server_ttl = $server['ttl'];
                     
@@ -443,10 +443,10 @@ class Cleantalk {
      * @return array
      */
     private function get_servers_ip($host)
-	{		
+	{
         if (!isset($host))
             return null;
-		
+
 		// Get DNS records about URL
         if (function_exists('dns_get_record')) {
             $records = dns_get_record($host, DNS_A);
@@ -456,7 +456,7 @@ class Cleantalk {
                 }
             }
         }
-		
+
 		// Another try if first failed
         if (count($servers) == 0 && function_exists('gethostbynamel')) {
             $records = gethostbynamel($host);
@@ -470,7 +470,7 @@ class Cleantalk {
                 }
             }
         }
-		
+
 		// If couldn't get records
         if (count($servers) == 0){
 			
@@ -481,33 +481,33 @@ class Cleantalk {
             );
 		
 		// If records recieved
-        }else{
+        } else {
 			
             $tmp = null;
             $fast_server_found = false;
-			
+                
             foreach ($servers as $server) {
 				
-				if ($fast_server_found) {
+                if ($fast_server_found) {
                     $ping = $this->max_server_timeout;
-                }else{
-					$ping = $this->httpPing($server['ip']);
-					$ping = $ping * 1000;					
-				}
-				
+                } else {
+                    $ping = $this->httpPing($server['ip']);
+                    $ping = $ping * 1000;
+                }
+                
 				$tmp[$ping] = $server;
-				
+                
 				$fast_server_found = $ping < $this->min_server_timeout ? true : false;
-				
-            }
-			
+
+    }
+
             if (count($tmp)){
                 ksort($tmp);
                 $response = $tmp;
-            }
-			
-        }
-		
+    }
+
+    }
+
         return empty($response) ? null : $response;
     }
     

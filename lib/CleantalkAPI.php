@@ -1,8 +1,5 @@
 <?php
 
-/**
- * CLeantalk API calls class
- */
 class CleantalkAPI
 {
 	const URL = 'https://api.cleantalk.org';
@@ -25,6 +22,29 @@ class CleantalkAPI
 		
 		$result = self::send_request($request);
 		$result = $do_check ? self::check_response($result, 'sfw_logs') : $result;
+		
+		return $result;
+	}
+	
+	/**
+	 * Function gets spam report
+	 *
+	 * @param string website host
+	 * @param integer report days
+	 * @return type
+	 */
+	static public function method__spam_check_cms($api_key, $data, $date = null, $do_check = true)
+	{
+		$request=Array(
+			'method_name' => 'spam_check_cms',
+			'auth_key' => $api_key,
+			'data' => is_array($data) ? implode(',',$data) : $data,
+		);
+		
+		if($date) $request['date'] = $date;
+		
+		$result = self::send_request($request);
+		$result = $do_check ? self::check_response($result, 'spam_check_cms') : $result;
 		
 		return $result;
 	}
@@ -55,7 +75,7 @@ class CleantalkAPI
 	 * @param string website platform
 	 * @return type
 	 */
-	static public function method__get_api_key($email, $host, $platform, $timezone = null, $language = null, $ip = null, $do_check = true)
+	static public function method__get_api_key($email, $host, $platform, $timezone = null, $language = null, $ip = null, $white_label = 0, $hoster_api_key = '', $do_check = true)
 	{		
 		$request = array(
 			'method_name'          => 'get_api_key',
@@ -64,14 +84,57 @@ class CleantalkAPI
 			'website'              => $host,
 			'platform'             => $platform,
 			'timezone'             => $timezone,
-			'http_accept_language' => !empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : null,
-			'user_ip'              => $ip ? $ip : self::ip_get(array('real'), false),
+			'http_accept_language' => $language,
+			'user_ip'              => $ip,
+			'hoster_whitelabel'    => $white_label,
+			'hoster_api_key'       => $hoster_api_key,
 		);
 		
 		$result = self::send_request($request);
 		$result = $do_check ? self::check_response($result, 'get_api_key') : $result;
 		
 		return $result;
+	}
+	
+	/**
+	 * Function gets spam report
+	 *
+	 * @param string website host
+	 * @param integer report days
+	 * @return type
+	 */
+	static public function method__get_antispam_report($host, $period = 1)
+	{
+		$request=Array(
+			'method_name' => 'get_antispam_report',
+			'hostname' => $host,
+			'period' => $period
+		);
+		
+		$result = self::send_request($request);
+		$result = $do_check ? self::check_response($result, 'get_antispam_report') : $result;
+		
+		return $result;
+	}
+	
+	/**
+	 * Function gets spam statistics
+	 *
+	 * @param string website host
+	 * @param integer report days
+	 * @return type
+	 */
+	static public function method__get_antispam_report_breif($api_key, $do_check = true)
+	{
+		$request = array(
+			'method_name' => 'get_antispam_report_breif',
+			'auth_key' => $api_key,
+		);
+		
+		$result = self::send_request($request);
+		$result = $do_check ? self::check_response($result, 'get_antispam_report_breif') : $result;
+		
+		return $result;		
 	}
 	
 	/**
@@ -109,71 +172,6 @@ class CleantalkAPI
 		
 		$result = self::send_request($request);
 		$result = $do_check ? self::check_response($result, 'notice_paid_till') : $result;
-		
-		return $result;
-	}
-
-	/**
-	 * Function gets spam report
-	 *
-	 * @param string website host
-	 * @param integer report days
-	 * @return type
-	 */
-	static public function method__get_antispam_report($host, $period = 1)
-	{
-		$request=Array(
-			'method_name' => 'get_antispam_report',
-			'hostname' => $host,
-			'period' => $period
-		);
-		
-		$result = self::send_request($request);
-		$result = $do_check ? self::check_response($result, 'get_antispam_report') : $result;
-		
-		return $result;
-	}
-	
-	/**
-	 * Function gets spam statistics
-	 *
-	 * @param string website host
-	 * @param integer report days
-	 * @return type
-	 */
-	static public function method__get_antispam_report_breif($api_key, $do_check = true)
-	{
-		
-		$request = array(
-			'method_name' => 'get_antispam_report_breif',
-			'auth_key' => $api_key,
-		);
-		
-		$result = self::send_request($request);
-		$result = $do_check ? self::check_response($result, 'get_antispam_report_breif') : $result;
-		
-		return $result;		
-	}
-	
-	/**
-	 * Function gets spam report
-	 *
-	 * @param string website host
-	 * @param integer report days
-	 * @return type
-	 */
-	static public function method__spam_check_cms($api_key, $data, $date = null, $do_check = true)
-	{
-		$request=Array(
-			'method_name' => 'spam_check_cms',
-			'auth_key' => $api_key,
-			'data' => is_array($data) ? implode(',',$data) : $data,
-		);
-		
-		if($date) $request['date'] = $date;
-		
-		$result = self::send_request($request);
-		$result = $do_check ? self::check_response($result, 'spam_check_cms') : $result;
 		
 		return $result;
 	}
@@ -342,9 +340,8 @@ class CleantalkAPI
 	 * @param integer connect timeout
 	 * @return type
 	 */
-	static public function send_request($data, $url = self::URL, $timeout = 3, $ssl = false)
-	{	
-		global $debug;
+	static public function send_request($data, $url = self::URL, $timeout = 5, $ssl = false)
+	{		
 		// Possibility to switch API url
 		$url = defined('CLEANTALK_API_URL') ? CLEANTALK_API_URL : $url;
 		
@@ -352,10 +349,14 @@ class CleantalkAPI
 		if(defined('CLEANTALK_AGENT'))
 			$data['agent'] = CLEANTALK_AGENT;
 		
-		$debug['sent_data'] = $data;
-		
+		// Make URL string
 		$data_string = http_build_query($data);
 		$data_string = str_replace("&amp;", "&", $data_string);
+		
+		// For debug purposes
+		global $apbct_debug;
+		$apbct_debug['sent_data'] = $data;
+		$apbct_debug['request_string'] = $data_string;
 		
 		if (function_exists('curl_init')){
 			
@@ -393,13 +394,12 @@ class CleantalkAPI
 				
 			}
 			
-		}else{
+		}else
 			$errors = 'CURL_NOT_INSTALLED';
-		}
 		
 		// Trying to use file_get_contents() to make a API call
-		if(!empty($errors) && ini_get('allow_url_fopen'))
-		{
+		if(!empty($errors) && ini_get('allow_url_fopen')){
+			
 			$opts = array(
 				'http'=>array(
 					'method'  => "POST",
@@ -409,6 +409,7 @@ class CleantalkAPI
 			);
 			$context = stream_context_create($opts);
 			$result = file_get_contents($url, 0, $context);
+			
 		}else
 			$errors .= '_AND_ALLOW_URL_FOPEN_IS_DISABLED';
 		
@@ -428,11 +429,13 @@ class CleantalkAPI
 	static public function check_response($result, $method_name = null)
 	{	
 		
+		$out = array();
+		
 		// Errors handling
 		
 		// Bad connection
 		if(empty($result)){
-			return array(
+			$out = array(
 				'error' => true,
 				'error_string' => 'CONNECTION_ERROR'
 			);
@@ -441,7 +444,7 @@ class CleantalkAPI
 		// JSON decode errors
 		$result = json_decode($result, true);
 		if(empty($result)){
-			return array(
+			$out = array(
 				'error' => true,
 				'error_string' => 'JSON_DECODE_ERROR'
 			);
@@ -449,7 +452,7 @@ class CleantalkAPI
 		
 		// cURL error
 		if(!empty($result['error'])){
-			return array(
+			$out = array(
 				'error' => true,
 				'error_string' => 'CONNECTION_ERROR: ' . $result['error_string'],
 			);
@@ -457,7 +460,7 @@ class CleantalkAPI
 		
 		// Server errors
 		if($result && (isset($result['error_no']) || isset($result['error_message']))){
-			return array(
+			$out = array(
 				'error' => true,
 				'error_string' => "SERVER_ERROR NO: {$result['error_no']} MSG: {$result['error_message']}",
 				'error_no' => $result['error_no'],
@@ -466,25 +469,33 @@ class CleantalkAPI
 		}
 		
 		// Pathces for different methods
-		
-		// mehod_name = notice_validate_key
-		if($method_name == 'notice_validate_key' && isset($result['valid']))
-			return $result;
+		if(empty($out['error'])){
+			
+			// mehod_name = notice_validate_key
+			if($method_name == 'notice_validate_key' && isset($result['valid']))
+				$out = $result;
+
+			// Other methods
+			if(isset($result['data']) && is_array($result['data'])){
+				$out = $result['data'];
+			}
+		}
 		
 		// mehod_name = get_antispam_report_breif
 		if($method_name == 'get_antispam_report_breif'){
-			$result = $result['data'];
+
+			if(empty($out['error']))
+				$result = $result['data'];
+
 			for( $tmp = array(), $i = 0; $i < 7; $i++ )
 				$tmp[ date( 'Y-m-d', time() - 86400 * 7 + 86400 * $i ) ] = 0;
-			
+
 			$result['spam_stat']    = array_merge( $tmp, isset($result['spam_stat']) ? $result['spam_stat'] : array() );
 			$result['top5_spam_ip'] = isset($result['top5_spam_ip']) ? $result['top5_spam_ip'] : array();
-			return $result;
+			$out = array_merge($result, $out);
 		}
 		
-		// Other methods
-		if(isset($result['data']) && is_array($result['data'])){
-			return $result['data'];
-		}
+		return $out;
+		
 	}
 }
