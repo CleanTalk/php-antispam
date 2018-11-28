@@ -187,8 +187,8 @@ class Cleantalk {
         switch ($method) {
             case 'check_message':
                 // Convert strings to UTF8
-                $request->message         = CleantalkHelper::arrayToUTF8( $request->message,         $this->data_codepage);
-                $request->example         = CleantalkHelper::arrayToUTF8( $request->example,         $this->data_codepage);
+                $request->message         = CleantalkHelper::stringToUTF8( $request->message,         $this->data_codepage);
+                $request->example         = CleantalkHelper::stringToUTF8( $request->example,         $this->data_codepage);
                 $request->sender_email    = CleantalkHelper::stringToUTF8($request->sender_email,    $this->data_codepage);
                 $request->sender_nickname = CleantalkHelper::stringToUTF8($request->sender_nickname, $this->data_codepage);
 
