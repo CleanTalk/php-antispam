@@ -1,4 +1,6 @@
 <?php
+require_once (dirname(__FILE__) . 'autoload.php');
+
 /**
  * CleanTalk anti-spam script for any web form 
  *
@@ -11,7 +13,9 @@
  * @see https://github.com/CleanTalk/php-antispam 
  *
  */
-
+use lib\CleantalkRequest;
+use lib\Cleantalk;
+use lib\CleantalkHelper;
 /*
     CleanTalk's global vars
 */
@@ -100,19 +104,26 @@ function ct_process_submission() {
             }
         }
     }
+    // Take params from config
+    $config_url = 'http://moderate.cleantalk.ru';
+    $auth_key = null; // Set Cleantalk auth key
 
-    $data = array(
-        'auth_key' => '__CT_KEY__',
-        'method_name' => 'check_newuser',
-        'agent' => 'php-1.1',
-        'sender_ip' => ct_session_ip($_SERVER['REMOTE_ADDR']),
-        'sender_email' => $sender_email,
-        'js_on' => $ct_checkjs,
-        'submit_time' => $ct_submit_time,
-        'sender_info' => null,
-    );
 
-    $result = ct_send_request($data, $ct_server_url);
+    // The facility in which to store the query parameters
+    $ct_request = new CleantalkRequest();
+
+    $ct_request->auth_key = $auth_key;
+    $ct_request->sender_email = $sender_email;
+    $ct_request->agent = 'php-api';
+    $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
+    $ct_request->js_on = $ct_checkjs; # Site visitor has JavaScript
+    $ct_request->submit_time = $ct_submit_time; # Seconds from start form filling till the form POST
+
+    $ct = new Cleantalk();
+    $ct->server_url = $config_url;
+
+    // Check
+    $ct_result = $ct->isAllowUser($ct_request);
 
     if ($result->errno != 0) {
         error_log($result->errstr);
@@ -127,130 +138,3 @@ function ct_process_submission() {
     
     return null;
 }
-
-
-/**
- * Send JSON request to servers 
- * @param $msg
- * @return boolean|\CleantalkResponse
- */
-function ct_send_request($data = null, $url, $server_timeout = 3) {
-    // Convert to array
-    $data = json_decode(json_encode($data), true);
-
-    // Convert to JSON
-    $data = json_encode($data);
-    
-    $result = false;
-    $curl_error = null;
-    if(function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $server_timeout);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        // receive server response ...
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // resolve 'Expect: 100-continue' issue
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
-        
-        $result = curl_exec($ch);
-        if (!$result) {
-            $curl_error = curl_error($ch);
-        }
-        
-        curl_close($ch); 
-    }
-
-    if (!$result) {
-        $allow_url_fopen = ini_get('allow_url_fopen');
-        if (function_exists('file_get_contents') && isset($allow_url_fopen) && $allow_url_fopen == '1') {
-            $opts = array('http' =>
-              array(
-                'method'  => 'POST',
-                'header'  => "Content-Type: text/html\r\n",
-                'content' => $data,
-                'timeout' => $server_timeout
-              )
-            );
-
-            $context  = stream_context_create($opts);
-            $result = @file_get_contents($url, false, $context);
-        }
-    }
-
-    if (!$result) {
-        $response = null;
-        $response['errno'] = 1;
-        if ($curl_error) {
-            $response['errstr'] = sprintf("CURL error: '%s'", $curl_error); 
-        } else {
-            $response['errstr'] = 'No CURL support compiled in'; 
-        }
-        $response['errstr'] .= ' or disabled allow_url_fopen in php.ini.'; 
-        $response = json_decode(json_encode($response));
-        
-        return $response;
-    }
-    
-    $errstr = null;
-    $response = json_decode($result);
-    if ($result !== false && is_object($response)) {
-        $response->errno = 0;
-        $response->errstr = $errstr;
-    } else {
-        $errstr = 'Unknown response from ' . $url . '.' . ' ' . $result;
-        
-        $response = null;
-        $response['errno'] = 1;
-        $response['errstr'] = $errstr;
-        $response = json_decode(json_encode($response));
-    } 
-    
-    
-    return $response;
-}
-/**
-*   Get user IP behind proxy server
-*/
-function ct_session_ip( $data_ip ) {
-    if (!$data_ip || !preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
-        return $data_ip;
-    }
-    if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        
-        $forwarded_ip = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
-
-        // Looking for first value in the list, it should be sender real IP address
-        if (!preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $forwarded_ip[0])) {
-            return $data_ip;
-        }
-
-        $private_src_ip = false;
-        $private_nets = array(
-            '10.0.0.0/8',
-            '127.0.0.0/8',
-            '176.16.0.0/12',
-            '192.168.0.0/16',
-        );
-
-        foreach ($private_nets as $v) {
-
-            // Private IP found
-            if ($private_src_ip) {
-                continue;
-            }
-            
-            if ($this->net_match($v, $data_ip)) {
-                $private_src_ip = true;
-            }
-        }
-        if ($private_src_ip) {
-            // Taking first IP from the list HTTP_X_FORWARDED_FOR 
-            $data_ip = $forwarded_ip[0]; 
-        }
-    }
-
-    return $data_ip;
-}
-?>
