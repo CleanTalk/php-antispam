@@ -3,11 +3,6 @@ require_once 'lib/Cleantalk.php';
 require_once 'lib/CleantalkRequest.php';
 require_once 'lib/CleantalkResponse.php';
 
-use lib\Cleantalk;
-use lib\CleantalkRequest;
-use lib\CleantalkResponse;
-use lib\CleantalkHelper;
-
 class CleantalkTest extends \PHPUnit\Framework\TestCase 
 {
 	protected $ct;
