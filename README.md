@@ -31,8 +31,8 @@ session_start();
 
 require_once (dirname(__FILE__) . 'autoload.php');
 
-use lib/Cleantalk;
-use lib/CleantalkRequest;
+use lib\Cleantalk;
+use lib\CleantalkRequest;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.org/api2.0/';
@@ -112,8 +112,8 @@ session_start();
 
 require_once (dirname(__FILE__) . 'autoload.php');
 
-use lib/Cleantalk;
-use lib/CleantalkRequest;
+use lib\Cleantalk;
+use lib\CleantalkRequest;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.org/api2.0/';
