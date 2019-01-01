@@ -8,6 +8,8 @@
     "homepage": "http://cleantalk.org",
     "keywords": ["spam", "anti-spam", "antispam", "api"],
     "autoload": {
-        "classmap": ["lib/Cleantalk.php", "lib/CleantalkRequest.php", "lib/CleantalkResponse.php", "lib/CleantalkAPI.php", "lib/CleantalkHelper.php"]
+        "psr-4": {
+            "lib\\": "lib"
+        }
     }
 }
