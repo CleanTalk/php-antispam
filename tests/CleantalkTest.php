@@ -1,5 +1,6 @@
 <?php
-require "vendor/autoload.php";
+require_once "lib/Cleantalk.php";
+require_once "lib/CleantalkRequest.php";
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
@@ -20,11 +21,6 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 
 	public function testIsAllowMessage()
 	{
-		$this->ct_request->sender_email = 'good@mail.org';
-		$this->ct_request->message = 'good message';
-		$result = $this->ct->isAllowMessage($this->ct_request);
-		$this->assertEquals(1, $result->allow);
-
 		$this->ct_request->sender_email = 's@cleantalk.org';
 		$this->ct_request->message = 'stop_word bad message';
 		$result = $this->ct->isAllowMessage($this->ct_request);
@@ -36,10 +32,6 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 
 	public function testIsAllowUser()
 	{
-		$this->ct_request->sender_email = 'good@mail.org';
-		$result = $this->ct->isAllowUser($this->ct_request);
-		$this->assertEquals(1, $result->allow);
-
 		$this->ct_request->sender_email = 's@cleantalk.org';
 		$result = $this->ct->isAllowUser($this->ct_request);
 		$this->assertEquals(0, $result->allow);
