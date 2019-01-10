@@ -29,7 +29,7 @@ API sends a comment's text and several previous approved comments to the servers
 
 session_start();
 
-require_once (dirname(__FILE__) . 'autoload.php');
+require "vendor/autoload.php";
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
@@ -110,7 +110,7 @@ else
 
 session_start();
 
-require_once (dirname(__FILE__) . 'autoload.php');
+require "vendor/autoload.php";
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
