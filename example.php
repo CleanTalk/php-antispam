@@ -45,5 +45,5 @@ if ($ct_result->allow == 1) {
     echo 'Comment blocked. Reason ' . $ct_result->comment;
 }
 echo "<br/>CleantalkAPI call example:<br/>";
-var_dump(CleantalkAPI::notice_validate_key('',''));
+var_dump(CleantalkAPI::method__notice_validate_key('',''));
 ?>
