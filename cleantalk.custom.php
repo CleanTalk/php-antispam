@@ -1,5 +1,5 @@
 <?php
-require_once (dirname(__FILE__) . 'autoload.php');
+require "vendor/autoload.php";
 
 /**
  * CleanTalk anti-spam script for any web form 

@@ -1,5 +1,5 @@
 <?php
-require_once 'autoload.php';
+require "vendor/autoload.php";
 
 /**
  * Cleantalk example

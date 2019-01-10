@@ -354,11 +354,6 @@ class CleantalkAPI
 		$data_string = http_build_query($data);
 		$data_string = str_replace("&amp;", "&", $data_string);
 		
-		// For debug purposes
-		global $apbct_debug;
-		$apbct_debug['sent_data'] = $data;
-		$apbct_debug['request_string'] = $data_string;
-		
 		if (function_exists('curl_init')){
 			
 			$ch = curl_init();
@@ -375,7 +370,6 @@ class CleantalkAPI
 			if ($ssl === true) {
 				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-				curl_setopt($ch, CURLOPT_CAINFO, APBCT_CASERT_PATH);
             }else{
 				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
