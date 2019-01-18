@@ -10,6 +10,9 @@
     "autoload": {
         "psr-4": {
             "lib\\": "lib"
-        }
+        },
+        "files": [
+            "lib/cleantalk-php-patch.php"
+        ]
     }
 }
