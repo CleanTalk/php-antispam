@@ -76,13 +76,13 @@ class CleantalkRequest {
 
     /**
      * User IP
-     * @var strings
+     * @var string
      */
     public $sender_ip = null;
 
     /**
      * User email
-     * @var strings
+     * @var string
      */
     public $sender_email = null;
 
