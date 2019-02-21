@@ -29,7 +29,11 @@ API sends a comment's text and several previous approved comments to the servers
 
 session_start();
 
-require "vendor/autoload.php";
+//require_once "vendor/autoload.php"; -- Composer
+
+require_once "lib/Cleantalk";
+require_once "lib/CleantalkRequest";
+require_once "lib/CleantalkAPI";
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;
@@ -110,7 +114,11 @@ else
 
 session_start();
 
-require "vendor/autoload.php";
+//require_once "vendor/autoload.php"; -- Composer
+
+require_once "lib/Cleantalk";
+require_once "lib/CleantalkRequest";
+require_once "lib/CleantalkAPI";
 
 use lib\Cleantalk;
 use lib\CleantalkRequest;

@@ -1,5 +1,9 @@
 <?php
-require "vendor/autoload.php";
+//require_once "vendor/autoload.php"; -- Composer
+
+require_once "lib/Cleantalk";
+require_once "lib/CleantalkRequest";
+require_once "lib/CleantalkAPI";
 
 /**
  * Cleantalk example
