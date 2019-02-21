@@ -1,5 +1,9 @@
 <?php
-require "vendor/autoload.php";
+//require_once "vendor/autoload.php"; -- Composer
+
+require_once "lib/Cleantalk.php";
+require_once "lib/CleantalkRequest.php";
+require_once "lib/CleantalkHelper.php";
 
 /**
  * CleanTalk anti-spam script for any web form 
