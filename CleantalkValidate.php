@@ -24,6 +24,10 @@ use lib\CleantalkHelper;
 /*
     CleanTalk's global vars
 */
+session_start();
+
+if (!count($_POST))
+    $_SESSION['ct_submit_time'] = time();
 
 class CleantalkValidate 
 {
@@ -32,14 +36,13 @@ class CleantalkValidate
 
     public static function spamCheckUser($name = '', $email = '') 
     { 
-        session_start();
-
         $ct_request = new lib\CleantalkRequest(); 
         $ct_request->auth_key = self::$access_key; 
         $ct_request->agent = 'php-api'; 
         $ct_request->sender_email = $email; 
         $ct_request->sender_ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
         $ct_request->sender_nickname = $name; 
+        $ct_request->submit_time = time() - (int) $_SESSION['ct_submit_time'];
         $ct_request->js_on = 1; 
         $ct = new lib\Cleantalk(); 
         $ct->server_url = self::$server_url; 
@@ -50,14 +53,13 @@ class CleantalkValidate
     } 
     public static function spamCheckMessage($name = '', $email = '', $message = '') 
     { 
-        session_start(); 
-
         $ct_request = new CleantalkRequest(); 
         $ct_request->auth_key = self::$access_key; 
         $ct_request->agent = 'php-api'; 
         $ct_request->sender_email = $email; 
         $ct_request->sender_ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
         $ct_request->sender_nickname = $name; 
+        $ct_request->submit_time = time() - (int) $_SESSION['ct_submit_time'];
         $ct_request->message = $message; 
         $ct_request->js_on = 1; 
         $ct = new Cleantalk(); 
