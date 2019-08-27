@@ -18,7 +18,7 @@ API sends a comment's text and several previous approved comments to the servers
 
 ## Requirements
 
-   * PHP 4.3 and above 
+   * PHP 5.6 and above 
    * CURL support 
 
 
