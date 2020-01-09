@@ -32,6 +32,7 @@ session_start();
 //require_once "vendor/autoload.php"; -- Composer
 
 require_once "lib/Cleantalk.php";
+require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkRequest.php";
 
 use lib\Cleantalk;
@@ -116,6 +117,7 @@ session_start();
 //require_once "vendor/autoload.php"; -- Composer
 
 require_once "lib/Cleantalk.php";
+require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkRequest.php";
 
 use lib\Cleantalk;
