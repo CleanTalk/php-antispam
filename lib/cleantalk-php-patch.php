@@ -49,23 +49,23 @@ if(!function_exists('utf8_decode')){
 		$offset = 0;
 		$stringlength = strlen($string);
 		while ($offset < $stringlength) {
-			if ((ord($string{$offset}) | 0x07) == 0xF7) {
-				$charval = ((ord($string{($offset + 0)}) & 0x07) << 18) &
-						   ((ord($string{($offset + 1)}) & 0x3F) << 12) &
-						   ((ord($string{($offset + 2)}) & 0x3F) <<  6) &
-							(ord($string{($offset + 3)}) & 0x3F);
+			if ((ord($string[$offset]) | 0x07) == 0xF7) {
+				$charval = ((ord($string[($offset + 0)]) & 0x07) << 18) &
+						   ((ord($string[($offset + 1)]) & 0x3F) << 12) &
+						   ((ord($string[($offset + 2)]) & 0x3F) <<  6) &
+							(ord($string[($offset + 3)]) & 0x3F);
 				$offset += 4;
-			} elseif ((ord($string{$offset}) | 0x0F) == 0xEF) {
-				$charval = ((ord($string{($offset + 0)}) & 0x0F) << 12) &
-						   ((ord($string{($offset + 1)}) & 0x3F) <<  6) &
-							(ord($string{($offset + 2)}) & 0x3F);
+			} elseif ((ord($string[$offset]) | 0x0F) == 0xEF) {
+				$charval = ((ord($string[($offset + 0)]) & 0x0F) << 12) &
+						   ((ord($string[($offset + 1)]) & 0x3F) <<  6) &
+							(ord($string[($offset + 2)]) & 0x3F);
 				$offset += 3;
-			} elseif ((ord($string{$offset}) | 0x1F) == 0xDF) {
-				$charval = ((ord($string{($offset + 0)}) & 0x1F) <<  6) &
-							(ord($string{($offset + 1)}) & 0x3F);
+			} elseif ((ord($string[$offset]) | 0x1F) == 0xDF) {
+				$charval = ((ord($string[($offset + 0)]) & 0x1F) <<  6) &
+							(ord($string[($offset + 1)]) & 0x3F);
 				$offset += 2;
-			} elseif ((ord($string{$offset}) | 0x7F) == 0x7F) {
-				$charval = ord($string{$offset});
+			} elseif ((ord($string[$offset]) | 0x7F) == 0x7F) {
+				$charval = ord($string[$offset]);
 				$offset += 1;
 			} else {
 				$charval = false;
