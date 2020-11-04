@@ -5,7 +5,19 @@ namespace lib;
  * Response class
  */
 class CleantalkResponse {
-
+	
+	/**
+	 * Checked IP
+	 * @var string
+	 */
+	public $sender_ip = null;
+	
+	/**
+	 * Checked Email
+	 * @var string
+	 */
+	public $sender_email = null;
+	
     /**
      * Received feedback nubmer
      * @var int

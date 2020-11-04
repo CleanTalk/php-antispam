@@ -5,7 +5,19 @@ namespace lib;
  * Cleantalk class create request
  */
 class Cleantalk {
-
+	
+	/**
+	 * Checked IP
+	 * @var string
+	 */
+	public $sender_ip = null;
+	
+	/**
+	 * Checked Email
+	 * @var string
+	 */
+	public $sender_email = null;
+	
     /**
 	* Maximum data size in bytes
 	* @var int
@@ -90,45 +102,65 @@ class Cleantalk {
      */
     public $max_server_timeout = 1500;
 	
-    /**
-     * Function checks whether it is possible to publish the message
-     * @param CleantalkRequest $request
-     * @return type
-     */
-    public function isAllowMessage(CleantalkRequest $request) {
-        $request = $this->filterRequest($request);
-        $msg = $this->createMsg('check_message', $request);
-        return $this->httpRequest($msg);
-    }
-
-    /**
-     * Function checks whether it is possible to publish the message
-     * @param CleantalkRequest $request
-     * @return type
-     */
-    public function isAllowUser(CleantalkRequest $request) {
-        $request = $this->filterRequest($request);
-        $msg = $this->createMsg('check_newuser', $request);
-        return $this->httpRequest($msg);
-    }
-
-    /**
-     * Function sends the results of manual moderation
-     *
-     * @param CleantalkRequest $request
-     * @return type
-     */
-    public function sendFeedback(CleantalkRequest $request) {
-        $request = $this->filterRequest($request);
-        $msg = $this->createMsg('send_feedback', $request);
-        return $this->httpRequest($msg);
-    }
-
-    /**
-     *  Filter request params
-     * @param CleantalkRequest $request
-     * @return type
-     */
+	/**
+	 * Function checks whether it is possible to publish the message
+	 *
+	 * @param CleantalkRequest $request
+	 *
+	 * @return CleantalkResponse
+	 */
+	public function isAllowMessage( CleantalkRequest $request ){
+		$request          = $this->filterRequest( $request );
+		$filtered_request = $this->createMsg( 'check_message', $request );
+		
+		$this->sender_ip    = $filtered_request->sender_ip;
+		$this->sender_email = $filtered_request->sender_email;
+		
+		return $this->httpRequest( $filtered_request );
+	}
+	
+	/**
+	 * Function checks whether it is possible to publish the message
+	 *
+	 * @param CleantalkRequest $request
+	 *
+	 * @return CleantalkResponse
+	 */
+	public function isAllowUser( CleantalkRequest $request ){
+		$request          = $this->filterRequest( $request );
+		$filtered_request = $this->createMsg( 'check_newuser', $request );
+		
+		$this->sender_ip    = $filtered_request->sender_ip;
+		$this->sender_email = $filtered_request->sender_email;
+		
+		return $this->httpRequest( $filtered_request );
+	}
+	
+	/**
+	 * Function sends the results of manual moderation
+	 *
+	 * @param CleantalkRequest $request
+	 *
+	 * @return CleantalkResponse
+	 */
+	public function sendFeedback( CleantalkRequest $request ){
+		
+		$request          = $this->filterRequest( $request );
+		$filtered_request = $this->createMsg( 'send_feedback', $request );
+		
+		$this->sender_ip    = $filtered_request->sender_ip;
+		$this->sender_email = $filtered_request->sender_email;
+		
+		return $this->httpRequest( $filtered_request );
+	}
+	
+	/**
+	 *  Filter request params
+	 *
+	 * @param CleantalkRequest $request
+	 *
+	 * @return CleantalkRequest
+	 */
     private function filterRequest(CleantalkRequest $request) {
 		
         // general and optional
@@ -153,7 +185,7 @@ class Cleantalk {
     
 	/**
      * Compress data and encode to base64 
-     * @param type string
+     * @param string
      * @return string 
      */
 	private function compressData($data = null){
@@ -174,14 +206,16 @@ class Cleantalk {
 		}
 
 		return $data;
-	} 
-
-    /**
-     * Create msg for cleantalk server
-     * @param type $method
-     * @param CleantalkRequest $request
-     * @return \xmlrpcmsg
-     */
+	}
+	
+	/**
+	 * Create msg for cleantalk server
+	 *
+	 * @param string $method
+	 * @param CleantalkRequest $request
+	 *
+	 * @return CleantalkRequest
+	 */
     private function createMsg($method, CleantalkRequest $request) {
 		
         switch ($method) {
@@ -221,13 +255,17 @@ class Cleantalk {
 		
         return $request;
     }
-    
-    /**
-     * Send JSON request to servers 
-     * @param $msg
-     * @return boolean|\CleantalkResponse
-     */
-    private function sendRequest($data = null, $url, $server_timeout = 3)
+	
+	/**
+	 * Send JSON request to servers
+	 *
+	 * @param $data
+	 * @param $url
+	 * @param int $server_timeout
+	 *
+	 * @return boolean|\CleantalkResponse
+	 */
+    private function sendRequest($data, $url, $server_timeout = 3)
 	{		
         // Convert to array
         $data = (array)json_decode(json_encode($data), true);
@@ -339,8 +377,10 @@ class Cleantalk {
 
     /**
      * httpRequest 
+     *
      * @param $msg
-     * @return boolean|\CleantalkResponse
+     *
+     * @return CleantalkResponse
      */
     private function httpRequest($msg) {
 		
@@ -425,7 +465,10 @@ class Cleantalk {
         }
 		
         $response = new CleantalkResponse(null, $result);
-		
+	
+	    $response->sender_ip    = $this->sender_ip;
+	    $response->sender_email = $this->sender_email;
+        
         if (!empty($this->data_codepage) && $this->data_codepage !== 'UTF-8') {
             if (!empty($response->comment))
             $response->comment = $this->stringFromUTF8($response->comment, $this->data_codepage);
