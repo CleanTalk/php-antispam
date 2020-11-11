@@ -17,9 +17,9 @@ require_once "lib/CleantalkAPI.php";
  *
 */
 
-use lib\CleantalkRequest;
-use lib\Cleantalk;
-use lib\CleantalkAPI;
+use Cleantalk\CleantalkRequest;
+use Cleantalk\Cleantalk;
+use Cleantalk\CleantalkAPI;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.ru';

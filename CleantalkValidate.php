@@ -18,9 +18,9 @@ require_once "lib/CleantalkHelper.php";
  * @see https://github.com/CleanTalk/php-antispam 
  *
  */
-use lib\CleantalkRequest;
-use lib\Cleantalk;
-use lib\CleantalkHelper;
+use Cleantalk\CleantalkRequest;
+use Cleantalk\Cleantalk;
+use Cleantalk\CleantalkHelper;
 /*
     CleanTalk's global vars
 */

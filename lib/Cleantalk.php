@@ -1,5 +1,5 @@
 <?php
-namespace lib;
+namespace Cleantalk;
 
 /**
  * Cleantalk class create request
