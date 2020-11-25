@@ -491,6 +491,8 @@ class Cleantalk {
         if (!isset($host))
             return null;
 
+        $servers = array();
+
 		// Get DNS records about URL
         if (function_exists('dns_get_record')) {
             $records = dns_get_record($host, DNS_A);
