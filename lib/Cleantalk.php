@@ -444,10 +444,7 @@ class Cleantalk {
 
                 return false;
 				
-            } else {
-				
-				$servers = $this->get_servers_ip($url_host);
-				
+            } else if(null !== $servers = $this->get_servers_ip($url_host)) {
                 // Loop until find work server
                 foreach ($servers as $server) {
                     
@@ -461,6 +458,8 @@ class Cleantalk {
                         break;
                     }
                 }
+            } else {
+                throw TransportException::fromUrlHostError($url_host);
             }
         }
 		
