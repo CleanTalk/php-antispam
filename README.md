@@ -35,8 +35,8 @@ require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkRequest.php";
 
-use lib\Cleantalk;
-use lib\CleantalkRequest;
+use Cleantalk\Cleantalk;
+use Cleantalk\CleantalkRequest;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.org/api2.0/';
@@ -120,8 +120,8 @@ require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkRequest.php";
 
-use lib\Cleantalk;
-use lib\CleantalkRequest;
+use Cleantalk\Cleantalk;
+use Cleantalk\CleantalkRequest;
 
 // Take params from config
 $config_url = 'http://moderate.cleantalk.org/api2.0/';
