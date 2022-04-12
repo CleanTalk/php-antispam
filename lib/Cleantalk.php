@@ -540,7 +540,7 @@ class Cleantalk {
                     $ping = $ping * 1000;
                 }
                 
-				$tmp[$ping] = $server;
+				$tmp[(int) $ping] = $server;
                 
 				$fast_server_found = $ping < $this->min_server_timeout ? true : false;
 
