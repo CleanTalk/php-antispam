@@ -146,7 +146,9 @@ class CleantalkResponse {
             $this->errno = $obj->errno;
             $this->errstr = $obj->errstr;
 
-			$this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
+	    $this->errstr = isset($this->errstr)
+                ? preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr)
+                : '';
 
             $this->stop_words = isset($obj->stop_words) ? utf8_decode($obj->stop_words) : null;
             $this->comment = isset($obj->comment) ? utf8_decode($obj->comment) : null;
