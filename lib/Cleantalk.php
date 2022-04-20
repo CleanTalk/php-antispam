@@ -384,8 +384,8 @@ class Cleantalk {
      */
     private function httpRequest($msg) {
 		
-		// Wiping cleantalk's headers but, not for send_feedback
-		if($msg->method_name != 'send_feedback'){
+		// Wiping cleantalk's headers, but not for send_feedback and not for set headers
+		if($msg->method_name != 'send_feedback' && empty($msg->all_headers)){
 			
 			$ct_tmp = apache_request_headers();
 			
