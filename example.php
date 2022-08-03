@@ -22,7 +22,7 @@ use Cleantalk\Cleantalk;
 use Cleantalk\CleantalkAPI;
 
 // Take params from config
-$config_url = 'http://moderate.cleantalk.ru';
+$config_url = 'https://moderate.cleantalk.org';
 $auth_key = null; // Set Cleantalk auth key
 
 
