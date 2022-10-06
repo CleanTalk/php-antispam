@@ -324,7 +324,11 @@ class CleantalkHelper
     * @return string
     */
     public static function stringToUTF8($str, $data_codepage = null)
-	{		
+	{
+	    //php8 deprecated fix
+        if ( is_null($str) ) {
+            $str = '';
+        }
         if (!preg_match('//u', $str) && function_exists('mb_detect_encoding') && function_exists('mb_convert_encoding')){
             
             if ($data_codepage !== null)
