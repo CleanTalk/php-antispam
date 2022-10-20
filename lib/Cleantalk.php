@@ -384,41 +384,23 @@ class Cleantalk {
      */
     private function httpRequest($msg) {
 		
-		// Wiping cleantalk's headers but, not for send_feedback
-		if($msg->method_name != 'send_feedback'){
-			
-			$ct_tmp = apache_request_headers();
-			
-			if(isset($ct_tmp['Cookie']))
-				$cookie_name = 'Cookie';
-			elseif(isset($ct_tmp['cookie']))
-				$cookie_name = 'cookie';
-			else
-				$cookie_name = 'COOKIE';
-            
-			if (isset($ct_tmp[$cookie_name]))
-            {
-                $ct_tmp[$cookie_name] = preg_replace(array(
-                    '/\s?ct_checkjs=[a-z0-9]*[^;]*;?/',
-                    '/\s?ct_timezone=.{0,1}\d{1,2}[^;]*;?/', 
-                    '/\s?ct_pointer_data=.*5D[^;]*;?/', 
-                    '/\s?apbct_timestamp=\d*[^;]*;?/',
-                    '/\s?apbct_site_landing_ts=\d*[^;]*;?/',
-                    '/\s?apbct_cookies_test=%7B.*%7D[^;]*;?/',
-                    '/\s?apbct_prev_referer=http.*?[^;]*;?/',
-                    '/\s?ct_cookies_test=.*?[^;]*;?/',
-                    '/\s?ct_ps_timestamp=.*?[^;]*;?/',
-                    '/\s?ct_fkp_timestamp=\d*?[^;]*;?/',
-                    '/\s?ct_sfw_pass_key=\d*?[^;]*;?/',
-                    '/\s?apbct_page_hits=\d*?[^;]*;?/',
-                    '/\s?apbct_visible_fields_count=\d*?[^;]*;?/',
-                    '/\s?apbct_visible_fields=%7B.*%7D[^;]*;?/',
-                ), '', $ct_tmp[$cookie_name]);
-                $msg->all_headers = $ct_tmp;                
-            }
-		}
+		// Wiping session cookies from request
+
+        $ct_tmp = apache_request_headers();
+
+        if ( isset($ct_tmp['Cookie']) ) {
+            $cookie_name = 'Cookie';
+        } elseif ( isset($ct_tmp['cookie']) ) {
+            $cookie_name = 'cookie';
+        } else {
+            $cookie_name = 'COOKIE';
+        }
+
+        if ( isset($ct_tmp[$cookie_name]) ) {
+            unset($ct_tmp[$cookie_name]);
+        }
 				
-		$msg->all_headers = json_encode($msg->all_headers);
+		$msg->all_headers = !empty($ct_tmp) ? json_encode($ct_tmp) : '';
 				
 		// Using current server without changing it
         if (false && (!empty($this->work_url) && ($this->server_changed + $this->server_ttl > time()))){
