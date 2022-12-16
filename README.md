@@ -19,7 +19,9 @@ API sends a comment's text and several previous approved comments to the servers
 ## Requirements
 
    * PHP 5.6 and above 
-   * CURL support 
+   * CURL support
+   * CleanTalk account https://cleantalk.org/register?product=anti-spam
+
 
 
 ## Sample SPAM test for user signup
