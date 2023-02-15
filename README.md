@@ -32,6 +32,7 @@ API sends a comment's text and several previous approved comments to the servers
 session_start();
 
 //require_once "vendor/autoload.php"; -- Composer
+//require_once "lib/cleantalk-php-patch.php"; -- PHP-FPM
 
 require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkHelper.php";
@@ -118,6 +119,7 @@ else
 session_start();
 
 //require_once "vendor/autoload.php"; -- Composer
+//require_once "lib/cleantalk-php-patch.php"; -- PHP-FPM
 
 require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkHelper.php";
