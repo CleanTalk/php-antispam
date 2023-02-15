@@ -36,6 +36,7 @@ session_start();
 require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkRequest.php";
+require_once "php-antispam/lib/CleantalkResponse.php";
 
 use Cleantalk\Cleantalk;
 use Cleantalk\CleantalkRequest;
@@ -121,6 +122,7 @@ session_start();
 require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkRequest.php";
+require_once "lib/CleantalkResponse.php";
 
 use Cleantalk\Cleantalk;
 use Cleantalk\CleantalkRequest;
