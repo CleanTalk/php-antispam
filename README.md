@@ -20,6 +20,12 @@ API sends a comment's text and several previous approved comments to the servers
 
    * PHP 5.6 and above 
    * CURL support 
+
+You can unpack the archive with the plugin to the root of the site or install it using the composer
+
+```php
+composer require cleantalk/php-antispam
+```
    
 ### Sample SPAM test for text comment and user signup
 
@@ -27,15 +33,19 @@ API sends a comment's text and several previous approved comments to the servers
 <?php
 session_start();
 
-//require_once "vendor/autoload.php"; -- Composer
-//require_once "lib/cleantalk-php-patch.php"; -- PHP-FPM
 $apikey = 'your_cleantalk_api_key';
 $email_field = 'name_email_form_field';
 $user_name_field = 'name_user_name_form_field';
 $message_field = 'name_message_form_field';
 $type_form = 'contact'; // use 'signup' for user signup form
 
+// if downloaded, unzip and include the app:
 require_once 'php-antispam/cleantalk-antispam.php';
+// if install the app by composer package:
+use Cleantalk\CleantalkAntispam;
+
+//require_once "lib/cleantalk-php-patch.php"; -- PHP-FPM
+
 $cleantalk_antispam = new CleantalkAntispam($apikey, $email_field, $user_name_field, $message_field, $type_form);
 $cleantalk_antispam->handle();
 ?>
