@@ -14,18 +14,21 @@ class CleantalkAntispam
 	private $email_field;
 	private $user_name_field;
 	private $message_field;
+	private $type_form;
 
 	public function __construct(
 		$apikey,
 		$email_field,
-		$user_name_field = null,
-		$message_field = null
+		$user_name_field = '',
+		$message_field = '',
+		$type_form = 'contact'
 	)
 	{
 		$this->apikey = $apikey;
 		$this->email_field = $email_field;
 		$this->user_name_field = $user_name_field;
 		$this->message_field = $message_field;
+		$this->type_form = $type_form;
 	}
 
 	public function handle()
@@ -55,12 +58,27 @@ class CleantalkAntispam
 		$ct->server_url = $ct_request::CLEANTALK_API_URL;
 
 		// Check
-		$ct_result = $ct->isAllowMessage($ct_request);
+		if ($this->type_form === 'signup') {
+			$ct_result = $ct->isAllowUser($ct_request);
+		}
+		if ($this->type_form === 'contact') {
+			$ct_result = $ct->isAllowMessage($ct_request);
+		}
 
 		if ($ct_result->allow == 1) {
-			echo 'Message allowed. Reason ' . $ct_result->comment;
+			if ($this->type_form === 'signup') {
+				echo 'User allowed. Reason ' . $ct_result->comment;
+			}
+			if ($this->type_form === 'contact') {
+				echo 'Message allowed. Reason ' . $ct_result->comment;
+			}
 		} else {
-			echo 'Message forbidden. Reason ' . $ct_result->comment;
+			if ($this->type_form === 'signup') {
+				echo 'User forbidden. Reason ' . $ct_result->comment;
+			}
+			if ($this->type_form === 'contact') {
+				echo 'Message forbidden. Reason ' . $ct_result->comment;
+			}
 		}
 		echo '<br /><br />';
 	}
