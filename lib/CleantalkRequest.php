@@ -4,7 +4,9 @@ namespace Cleantalk;
 /**
  * Request class
  */
-class CleantalkRequest {
+class CleantalkRequest
+{
+	const CLEANTALK_API_URL = 'https://moderate.cleantalk.org/api2.0/';
 
      /**
      *  All http request headers
