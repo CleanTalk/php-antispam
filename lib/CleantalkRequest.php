@@ -121,17 +121,6 @@ class CleantalkRequest {
     public $x_real_ip = '';
 
     /**
-     * Is enable Java Script,
-     * valid are 0|1|2
-	 * Status:
-	 *  null - JS html code not inserted into phpBB templates
-	 *  0 - JS disabled at the client browser
-	 *  1 - JS enabled at the client broswer
-     * @var int
-     */
-    public $js_on = null;
-
-    /**
      * user time zone
      * @var string
      */
@@ -154,7 +143,12 @@ class CleantalkRequest {
     * Method name
     * @var string
     */
-    public $method_name = 'check_message'; 
+    public $method_name = 'check_message';
+
+	/**
+	 * @var string|null
+	 */
+	public $event_token;
 
     /**
      * Fill params with constructor
