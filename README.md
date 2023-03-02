@@ -51,13 +51,13 @@ $cleantalk_antispam->handle();
 ?>
 
 <form method="post">
-    <label for="login">Login:<label>
+    <label for="login">Login:</label>
     <input type="text" name="name_user_name_form_field" id="login" />
     <br />
-    <label for="email">Email:<label>
+    <label for="email">Email:</label>
     <input type="text" name="name_email_form_field" id="email" value="" />
     <br />
-    <label for="message">Message:<label>
+    <label for="message">Message:</label>
     <textarea name="name_message_form_field" id="message"></textarea>
     <br />
     <input type="submit" />
