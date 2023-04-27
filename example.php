@@ -6,6 +6,7 @@ require_once "lib/CleantalkRequest.php";
 require_once "lib/CleantalkResponse.php";
 require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkAPI.php";
+require_once "lib/cleantalk-php-patch.php";
 
 /**
  * Cleantalk example
@@ -22,7 +23,7 @@ use Cleantalk\Cleantalk;
 use Cleantalk\CleantalkAPI;
 
 // Take params from config
-$config_url = 'http://moderate.cleantalk.ru';
+$config_url = 'https://moderate.cleantalk.org';
 $auth_key = null; // Set Cleantalk auth key
 
 
