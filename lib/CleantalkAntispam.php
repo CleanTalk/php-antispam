@@ -59,22 +59,7 @@ class CleantalkAntispam
 			$ct_result = $ct->isAllowMessage($ct_request);
 		}
 
-		if ($ct_result->allow == 1) {
-			if ($this->type_form === 'signup') {
-				echo 'User allowed. Reason ' . $ct_result->comment;
-			}
-			if ($this->type_form === 'contact') {
-				echo 'Message allowed. Reason ' . $ct_result->comment;
-			}
-		} else {
-			if ($this->type_form === 'signup') {
-				echo 'User forbidden. Reason ' . $ct_result->comment;
-			}
-			if ($this->type_form === 'contact') {
-				echo 'Message forbidden. Reason ' . $ct_result->comment;
-			}
-		}
-		echo '<br /><br />';
+        return $ct_result;
 	}
 
 	public function frontendScript()
