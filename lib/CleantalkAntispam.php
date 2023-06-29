@@ -45,7 +45,6 @@ class CleantalkAntispam
 		$ct_request->sender_ip = $sender_ip;
 		$ct_request->sender_nickname = $sender_nickname;
 		$ct_request->message = $message;
-		$ct_request->submit_time = time() - (int) $_SESSION['ct_submit_time'];
 		$ct_request->event_token = isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null;
 
 		$ct = new Cleantalk();
