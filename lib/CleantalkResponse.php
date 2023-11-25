@@ -5,31 +5,31 @@ namespace Cleantalk;
  * Response class
  */
 class CleantalkResponse {
-	
+
 	/**
 	 * Checked IP
 	 * @var string
 	 */
 	public $sender_ip = null;
-	
+
 	/**
 	 * Checked Email
 	 * @var string
 	 */
 	public $sender_email = null;
-	
+
     /**
      * Received feedback nubmer
      * @var int
      */
     public $received = null;
-	
+
     /**
      *  Is stop words
      * @var int
      */
     public $stop_words = null;
-    
+
     /**
      * Cleantalk comment
      * @var string
@@ -80,57 +80,75 @@ class CleantalkResponse {
 
     /**
      * Is JS
-     * @var type 
+     * @var type
      */
     public $js_disabled = null;
 
     /**
      * Sms check
-     * @var type 
+     * @var type
      */
     public $sms_allow = null;
 
     /**
      * Sms code result
-     * @var type 
+     * @var type
      */
     public $sms = null;
-	
+
     /**
      * Sms error code
-     * @var type 
+     * @var type
      */
     public $sms_error_code = null;
-	
+
     /**
      * Sms error code
-     * @var type 
+     * @var type
      */
     public $sms_error_text = null;
-    
+
 	/**
      * Stop queue message, 1|0
-     * @var int  
+     * @var int
      */
     public $stop_queue = null;
-	
+
     /**
      * Account shuld by deactivated after registration, 1|0
-     * @var int  
+     * @var int
      */
     public $inactive = null;
 
     /**
-     * Account status 
-     * @var int  
+     * Account status
+     * @var int
      */
     public $account_status = -1;
-	
+
 	/**
 	 * @var array Contains codes returned from server
 	 */
 	public $codes = array();
-	
+
+    /**
+     * @var int Frequency of visitor spotted in 24 hours
+     */
+    public $ip_frequency_24hour = 0;
+
+    /**
+     * @var int Frequency of visitor spotted in 24 hours
+     */
+    public $ip_frequency_10min = 0;
+    /**
+     * @var int Frequency of visitor spotted in 24 hours
+     */
+    public $ip_frequency_1hour = 0;
+    /**
+     * @var float Bot expectation percentage.
+     */
+    public $bot_expectation = 0.0;
+
     /**
      * Create server response
      *
@@ -168,8 +186,14 @@ class CleantalkResponse {
 			$this->received = (isset($obj->received)) ? $obj->received : -1;
 			$this->codes = (isset($obj->codes)) ? explode(' ', $obj->codes) : array();
 
+            $this->bot_expectation = (isset($obj->bot_expectation)) ? $obj->bot_expectation : 0.0;
+            $this->ip_frequency_24hour = (isset($obj->ip_frequency_24hour)) ? $obj->ip_frequency_24hour : 0;
+            $this->ip_frequency_1hour = (isset($obj->ip_frequency_1hour)) ? $obj->ip_frequency_1hour : 0;
+            $this->ip_frequency_10min = (isset($obj->ip_frequency_10min)) ? $obj->ip_frequency_10min : 0;
+
+
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
-                $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***'; 
+                $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***';
         }
     }
 }
