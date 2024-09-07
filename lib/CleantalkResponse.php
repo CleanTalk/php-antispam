@@ -168,8 +168,8 @@ class CleantalkResponse {
                 ? preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr)
                 : '';
 
-            $this->stop_words = isset($obj->stop_words) ? utf8_decode($obj->stop_words) : null;
-            $this->comment = isset($obj->comment) ? utf8_decode($obj->comment) : null;
+            $this->stop_words = isset($obj->stop_words) ? $obj->stop_words : null;
+            $this->comment = isset($obj->comment) ? $obj->comment : null;
             $this->blacklisted = (isset($obj->blacklisted)) ? $obj->blacklisted : null;
             $this->allow = (isset($obj->allow)) ? $obj->allow : 0;
             $this->id = (isset($obj->id)) ? $obj->id : null;
