@@ -34,7 +34,7 @@ class CleantalkHelper
 			),
 		),
 	);
-	
+
 	private static $private_networks = array(
 		'10.0.0.0/8',
 		'100.64.0.0/10',
@@ -42,7 +42,7 @@ class CleantalkHelper
 		'192.168.0.0/16',
 		'127.0.0.1/32',
 	);
-	
+
 	/*
 	*	Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
 	*	reutrns array('remote_addr' => 'val', ['x_forwarded_for' => 'val', ['x_real_ip' => 'val', ['cloud_flare' => 'val']]])
@@ -53,14 +53,14 @@ class CleantalkHelper
 		foreach($ips_input as $ip_type){
 			$ips[$ip_type] = '';
 		} unset($ip_type);
-				
+
 		$headers = apache_request_headers();
-		
+
 		// REMOTE_ADDR
 		if(isset($ips['remote_addr'])){
 			$ips['remote_addr'] = $_SERVER['REMOTE_ADDR'];
 		}
-		
+
 		// X-Forwarded-For
 		if(isset($ips['x_forwarded_for'])){
 			if(isset($headers['X-Forwarded-For'])){
@@ -68,7 +68,7 @@ class CleantalkHelper
 				$ips['x_forwarded_for']= trim($tmp[0]);
 			}
 		}
-		
+
 		// X-Real-Ip
 		if(isset($ips['x_real_ip'])){
 			if(isset($headers['X-Real-Ip'])){
@@ -76,7 +76,7 @@ class CleantalkHelper
 				$ips['x_real_ip']= trim($tmp[0]);
 			}
 		}
-		
+
 		// Cloud Flare
 		if(isset($ips['cloud_flare'])){
 			if(isset($headers['Cf-Connecting-Ip'])){
@@ -85,12 +85,12 @@ class CleantalkHelper
 				}
 			}
 		}
-		
+
 		// Getting real IP from REMOTE_ADDR or Cf_Connecting_Ip if set or from (X-Forwarded-For, X-Real-Ip) if REMOTE_ADDR is local.
 		if(isset($ips['real'])){
-			
+
 			$ips['real'] = $_SERVER['REMOTE_ADDR'];
-			
+
 			// Cloud Flare
 			if(isset($headers['Cf-Connecting-Ip'])){
 				if(self::ip_mask_match($ips['real'], self::$cdn_pool['cloud_flare']['ipv4'])){
@@ -110,7 +110,7 @@ class CleantalkHelper
 				}
 			}
 		}
-		
+
 		// Validating IPs
 		$result = array();
 		foreach($ips as $key => $ip){
@@ -122,19 +122,19 @@ class CleantalkHelper
 					$result[$key] = $ip;
 			}
 		}
-		
+
 		$result = array_unique($result);
-		
-		return count($ips_input) > 1 
-			? $result 
+
+		return count($ips_input) > 1
+			? $result
 			: (reset($result) !== false
 				? reset($result)
 				: null);
 	}
-		
+
 	/*
 	 * Check if the IP belong to mask. Recursivly if array given
-	 * @param ip string  
+	 * @param ip string
 	 * @param cird mixed (string|array of strings)
 	*/
 	static public function ip_mask_match($ip, $cidr){
@@ -151,7 +151,7 @@ class CleantalkHelper
 		$mask = 4294967295 << (32 - $exploded[1]);
 		return (ip2long($ip) & $mask) == (ip2long($net) & $mask);
 	}
-	
+
 	/*
 	*	Validating IPv4, IPv6
 	*	param (string) $ip
@@ -164,7 +164,7 @@ class CleantalkHelper
 		if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) return 'v6';  // IPv6
 		                                                          return false; // Unknown
 	}
-	
+
 	/**
 	 * Function sends raw http request
 	 *
@@ -173,7 +173,7 @@ class CleantalkHelper
 	 * dont_wait_for_answer - async requests
 	 * get                  - GET-request
 	 * ssl                  - use SSL
-	 * 
+	 *
 	 * @param string result
 	 * @param string request_method
 	 * @return mixed (array || array('error' => true))
@@ -181,9 +181,9 @@ class CleantalkHelper
 	static public function http__request($url, $data = array(), $presets = null, $opts = array())
 	{
 		if(function_exists('curl_init')){
-		
+
 			$ch = curl_init();
-			
+
 			// Obligatory options
 			$opts = array(
 				CURLOPT_URL               => $url,
@@ -197,48 +197,48 @@ class CleantalkHelper
 				CURLOPT_SSL_VERIFYHOST    => 0,
 				CURLOPT_HTTPHEADER        => array('Expect:'), // Fix for large data and old servers http://php.net/manual/ru/function.curl-setopt.php#82418
 			);
-			
+
 			// Use presets
 			$presets = is_array($presets) ? $presets : array($presets);
 			foreach($presets as $preset){
-				
+
 				switch($preset){
-					
+
 					// Get headers only
 					case 'get_code':
 						$opts[CURLOPT_HEADER] = true;
 						$opts[CURLOPT_NOBODY] = true;
 						break;
-						
+
 					// Make a request, don't wait for an answer
 					case 'dont_wait_for_answer':
 						$opts[CURLOPT_CONNECTTIMEOUT_MS] = 1000;
 						$opts[CURLOPT_TIMEOUT_MS] = 500;
 						break;
-					
+
 					case 'get':
 						$opts[CURLOPT_URL] .= '?'.str_replace("&amp;", "&", http_build_query($data));
 						$opts[CURLOPT_POST] = false;
 						$opts[CURLOPT_POSTFIELDS] = null;
 						break;
-					
+
 					case 'ssl':
 						$opts[CURLOPT_SSL_VERIFYPEER] = true;
 						$opts[CURLOPT_SSL_VERIFYHOST] = 2;
 						break;
-					
+
 					default:
-						
+
 						break;
 				}
-		
+
 			} unset($preset);
-		
+
 			curl_setopt_array($ch, $opts);
 			$result = @curl_exec($ch);
-		
+
 			if(in_array('dont_wait_for_answer', $presets)) return true;
-		
+
 			if($result){
 				$result = explode(PHP_EOL, $result);
 				if(in_array('get_code', $presets)) $result = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
@@ -248,7 +248,7 @@ class CleantalkHelper
 				$error = array('error' => true, 'error_string' => curl_error($ch));
 		}else
 			$error = array('error' => true, 'error_string' => 'CURL_NOT_INSTALLED');
-		
+
 		/** Fix for get_code preset */
 		if($presets && ($presets == 'get_code' || (is_array($presets) && in_array('get_code', $presets) ) )
 			&& (isset($error) && $error['error_string'] == 'CURL_NOT_INSTALLED')
@@ -256,10 +256,10 @@ class CleantalkHelper
 			$headers = get_headers($url);
 			$out = (int)preg_replace('/.*(\d{3}).*/', '$1', $headers[0]);
 		}
-		
+
 		return $out;
 	}
-	
+
 	/**
 	* Checks if the string is JSON type
 	* @param string
@@ -269,7 +269,7 @@ class CleantalkHelper
 	{
 		return is_string($string) && is_array(json_decode($string, true)) ? true : false;
 	}
-		
+
 	/**
 	* Function removing non UTF8 characters from array||string
 	* @param  mixed(array||string)
@@ -286,7 +286,7 @@ class CleantalkHelper
 		}
 		return $data;
 	}
-		
+
 	/**
 	* Function removing non UTF8 characters from array||string
 	* param  mixed(array||string)
@@ -300,7 +300,7 @@ class CleantalkHelper
 	}
 
 	/**
-	* Function convert array to UTF8 and removes non UTF8 characters 
+	* Function convert array to UTF8 and removes non UTF8 characters
 	* param array
 	* param string
 	* @return array
@@ -308,7 +308,7 @@ class CleantalkHelper
 	public static function arrayToUTF8($array, $data_codepage = null)
 	{
 		foreach($array as $key => $val){
-			
+
 			if(is_array($val))
 				$array[$key] = self::arrayToUTF8($val, $data_codepage);
 			else
@@ -316,9 +316,9 @@ class CleantalkHelper
 		}
 		return $array;
 	}
-	
+
     /**
-    * Function convert string to UTF8 and removes non UTF8 characters 
+    * Function convert string to UTF8 and removes non UTF8 characters
     * param string
     * param string
     * @return string
@@ -330,18 +330,18 @@ class CleantalkHelper
             $str = '';
         }
         if (!preg_match('//u', $str) && function_exists('mb_detect_encoding') && function_exists('mb_convert_encoding')){
-            
+
             if ($data_codepage !== null)
                 return mb_convert_encoding($str, 'UTF-8', $data_codepage);
-			
+
             $encoding = mb_detect_encoding($str);
-			
+
             if ($encoding)
                 return mb_convert_encoding($str, 'UTF-8', $encoding);
         }
         return $str;
     }
-    
+
     /**
     * Function convert string from UTF8 
     * param string
