@@ -343,16 +343,32 @@ class CleantalkHelper
     }
 
     /**
-    * Function convert string from UTF8 
-    * param string
-    * param string
-    * @return string
-    */
-    public static function stringFromUTF8($str, $data_codepage = null)
-	{
-        if(preg_match('u', $str) && function_exists('mb_convert_encoding') && $data_codepage !== null)
-            return mb_convert_encoding($str, $data_codepage, 'UTF-8');
-		
-        return $str;
-	}
+     * Function convert from UTF8
+     *
+     * @param array|object|string $obj
+     * @param string $data_codepage
+     *
+     * @return mixed (array|object|string)
+     */
+    public static function stringFromUTF8($obj, $data_codepage = null)
+    {
+        // Array || object
+        if (is_array($obj) || is_object($obj)) {
+            foreach ($obj as $_key => &$val) {
+                $val = self::stringFromUTF8($val, $data_codepage);
+            }
+            unset($val);
+            //String
+        } else {
+            if ($data_codepage !== null && preg_match('//u', $obj)) {
+                if ( function_exists('mb_convert_encoding') ) {
+                    $obj = mb_convert_encoding($obj, $data_codepage, 'UTF-8');
+                } elseif (version_compare(phpversion(), '8.3', '<')) {
+                    $obj = @utf8_decode($obj);
+                }
+            }
+        }
+
+        return $obj;
+    }
 }
