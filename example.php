@@ -12,9 +12,9 @@ require_once "lib/cleantalk-php-patch.php";
  * Cleantalk example
  *
  * @package Cleantalk Example
- * @copyright (C) 2011 - 2012 Сleantalk team (http://cleantalk.ru)
+ * @copyright (C) 2011 - 2012 Сleantalk team (https://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
- * @see http://cleantalk.ru/wiki/doku.php/api
+ * @see https://cleantalk.org/wiki/doku.php/api
  *
 */
 
