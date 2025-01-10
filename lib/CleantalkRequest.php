@@ -19,7 +19,7 @@ class CleantalkRequest
      *  IP address of connection
      * @var string
      */
-    //public $remote_addr = null;
+    public $remote_addr = null;
 
     /**
      *  Last error number
@@ -119,8 +119,13 @@ class CleantalkRequest
      * @var int
      */
     public $submit_time = null;
-
+    /**
+     * @var string
+     */
     public $x_forwarded_for = '';
+    /**
+     * @var string
+     */
     public $x_real_ip = '';
 
     /**
@@ -131,16 +136,17 @@ class CleantalkRequest
 
     /**
      * Feedback string,
-     * valid are 'requset_id:(1|0)'
+     * valid are 'request_id:(1|0)'
      * @var string
      */
-    public $feedback = null;
+    public $feedback;
 
     /**
      * Phone number
-     * @var type
+     * @var string
+     * @deprecated
      */
-    public $phone = null;
+    public $phone;
 
     /**
      * Method name
@@ -152,11 +158,15 @@ class CleantalkRequest
      * @var string|null
      */
     public $event_token;
+    /**
+     * @var int
+     */
+    public $js_on;
 
     /**
      * Fill params with constructor
      *
-     * @param type $params
+     * @param $params array|null
      */
     public function __construct($params = null)
     {

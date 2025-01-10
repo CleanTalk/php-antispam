@@ -27,6 +27,7 @@
         <MissingPropertyType errorLevel="suppress"/>
         <UnusedClass>
             <errorLevel type="suppress">
+                <directory name="./"/>
             </errorLevel>
         </UnusedClass>
         <InvalidGlobal>
@@ -37,8 +38,14 @@
             <errorLevel type="suppress">
             </errorLevel>
         </UnusedVariable>
+        <PossiblyUnusedProperty>
+            <errorLevel type="suppress">
+                <directory name="./"/>
+            </errorLevel>
+        </PossiblyUnusedProperty>
         <PossiblyUnusedMethod>
             <errorLevel type="suppress">
+                <directory name="./"/>
             </errorLevel>
         </PossiblyUnusedMethod>
     </issueHandlers>

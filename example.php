@@ -23,8 +23,19 @@ use Cleantalk\CleantalkAPI;
 
 // Take params from config
 $config_url = 'https://moderate.cleantalk.org';
-$auth_key   = null; // Set Cleantalk auth key
+$auth_key   = ''; // Set Cleantalk auth key
+$validation = CleantalkAPI::method__notice_validate_key($auth_key, 'php-api');
+$validation = json_decode($validation) ? json_decode($validation) : false;
+$is_valid = is_object($validation) && $validation->valid;
 
+echo "Access key validation result:";
+echo CleantalkAPI::method__notice_validate_key($auth_key, 'php-api');
+echo "\n";
+
+if (!$is_valid) {
+    echo "Access key is not valid. Please check access key in the config.\n";
+    exit;
+}
 
 // The facility in which to store the query parameters
 $ct_request = new CleantalkRequest();
@@ -49,5 +60,3 @@ if ( $ct_result->allow == 1 ) {
 } else {
     echo 'Comment blocked. Reason ' . $ct_result->comment;
 }
-echo "<br/>CleantalkAPI call example:<br/>";
-var_dump(CleantalkAPI::method__notice_validate_key('', ''));

@@ -81,39 +81,39 @@ class CleantalkResponse
 
     /**
      * Is JS
-     * @var type
+     * @var int
      */
     public $js_disabled = null;
 
     /**
      * Sms check
-     * @var type
+     * @var int
      */
-    public $sms_allow = null;
+    public $sms_allow;
 
     /**
      * Sms code result
-     * @var type
+     * @var int
      */
-    public $sms = null;
+    public $sms;
 
     /**
      * Sms error code
-     * @var type
+     * @var int
      */
-    public $sms_error_code = null;
+    public $sms_error_code;
 
     /**
      * Sms error code
-     * @var type
+     * @var string
      */
-    public $sms_error_text = null;
+    public $sms_error_text;
 
     /**
      * Stop queue message, 1|0
      * @var int
      */
-    public $stop_queue = null;
+    public $stop_queue = 0;
 
     /**
      * Account shuld by deactivated after registration, 1|0
@@ -129,6 +129,7 @@ class CleantalkResponse
 
     /**
      * @var array Contains codes returned from server
+     * @psalm-suppress PossiblyUnusedProperty
      */
     public $codes = array();
 
@@ -153,8 +154,8 @@ class CleantalkResponse
     /**
      * Create server response
      *
-     * @param type $response
-     * @param type $obj
+     * @param $response null|array
+     * @param $obj CleantalkResponse
      */
     public function __construct($response = null, $obj = null)
     {

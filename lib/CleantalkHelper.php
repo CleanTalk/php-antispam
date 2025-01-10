@@ -155,7 +155,7 @@ class CleantalkHelper
         }
         $exploded = explode('/', $cidr);
         $net      = $exploded[0];
-        $mask     = 4294967295 << (32 - $exploded[1]);
+        $mask     = 4294967295 << (32 - (int)$exploded[1]);
 
         return (ip2long($ip) & $mask) == (ip2long($net) & $mask);
     }
@@ -198,6 +198,7 @@ class CleantalkHelper
      */
     public static function http__request($url, $data = array(), $presets = null, $opts = array()) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
+        $out = array();
         if ( function_exists('curl_init') ) {
             $ch = curl_init();
 
@@ -258,7 +259,7 @@ class CleantalkHelper
                 return true;
             }
 
-            if ( $result ) {
+            if ( is_string($result) ) {
                 $result = explode(PHP_EOL, $result);
                 if ( in_array('get_code', $presets) ) {
                     $result = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
@@ -274,8 +275,10 @@ class CleantalkHelper
         }
 
         /** Fix for get_code preset */
-        if ( $presets && ($presets == 'get_code' || (is_array($presets) && in_array('get_code', $presets)))
-             && (isset($error) && $error['error_string'] == 'CURL_NOT_INSTALLED')
+        if (
+            $presets && ($presets == 'get_code'
+            || (is_array($presets) && in_array('get_code', $presets)))
+            && $error['error_string'] == 'CURL_NOT_INSTALLED'
         ) {
             $headers = get_headers($url);
             $out     = (int)preg_replace('/.*(\d{3}).*/', '$1', $headers[0]);
@@ -299,9 +302,9 @@ class CleantalkHelper
     /**
      * Function removing non UTF8 characters from array||string
      *
-     * @param $data mixed(array||string)
+     * @param $data array|string
      *
-     * @return mixed(array||string)
+     * @return array|string
      */
     public static function removeNonUTF8FromArray($data)
     {
@@ -351,7 +354,7 @@ class CleantalkHelper
 
     /**
      * Function convert string to UTF8 and removes non UTF8 characters
-     * @param $str string
+     * @param $str string|null
      * @param $data_codepage string
      * @return string
      */

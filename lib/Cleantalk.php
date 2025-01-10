@@ -69,9 +69,9 @@ class Cleantalk
 
     /**
      * Codepage of the data
-     * @var bool
+     * @var string|null
      */
-    public $data_codepage = null;
+    public $data_codepage;
 
     /**
      * API version to use
@@ -109,6 +109,7 @@ class Cleantalk
      * @param CleantalkRequest $request
      *
      * @return CleantalkResponse
+     * @throws TransportException
      */
     public function isAllowMessage(CleantalkRequest $request)
     {
@@ -127,6 +128,7 @@ class Cleantalk
      * @param CleantalkRequest $request
      *
      * @return CleantalkResponse
+     * @throws TransportException
      */
     public function isAllowUser(CleantalkRequest $request)
     {
@@ -145,6 +147,7 @@ class Cleantalk
      * @param CleantalkRequest $request
      *
      * @return CleantalkResponse
+     * @throws TransportException
      */
     public function sendFeedback(CleantalkRequest $request)
     {
@@ -163,6 +166,7 @@ class Cleantalk
      * @param CleantalkRequest $request
      *
      * @return CleantalkResponse
+     * @throws TransportException
      */
     public function checkBot(CleantalkRequest $request)
     {
@@ -246,11 +250,11 @@ class Cleantalk
     /**
      * Compress data and encode to base64
      *
-     * @param string
-     *
+     * @param string $data
+     * @psalm-suppress UnusedMethod
      * @return string
      */
-    private function compressData($data = null)
+    private function compressData($data = '')
     {
         if ( strlen($data) > $this->dataMaxSise && function_exists('gzencode') && function_exists('base64_encode') ) {
             $localData = gzencode($data, $this->compressRate, FORCE_GZIP);
@@ -334,7 +338,7 @@ class Cleantalk
      * @param $url
      * @param int $server_timeout
      *
-     * @return boolean|\CleantalkResponse
+     * @return boolean|CleantalkResponse
      */
     private function sendRequest($data, $url, $server_timeout = 3)
     {
@@ -397,7 +401,7 @@ class Cleantalk
 
         if ( ! $result ) {
             $allow_url_fopen = ini_get('allow_url_fopen');
-            if ( function_exists('file_get_contents') && isset($allow_url_fopen) && $allow_url_fopen == '1' ) {
+            if ( function_exists('file_get_contents') && !empty($allow_url_fopen) && $allow_url_fopen == '1' ) {
                 $opts = array(
                     'http' =>
                         array(
@@ -413,7 +417,7 @@ class Cleantalk
             }
         }
 
-        if ( ! $result || ! CleantalkHelper::is_json($result) ) {
+        if ( !is_string($result) || ! CleantalkHelper::is_json($result) ) {
             $response          = null;
             $response['errno'] = 1;
             if ( $curl_error ) {
@@ -429,7 +433,7 @@ class Cleantalk
 
         $errstr   = null;
         $response = json_decode($result);
-        if ( $result !== false && is_object($response) ) {
+        if ( is_object($response) ) {
             $response->errno  = 0;
             $response->errstr = $errstr;
         } else {
@@ -451,6 +455,7 @@ class Cleantalk
      * @param $msg
      *
      * @return CleantalkResponse
+     * @throws TransportException
      */
     private function httpRequest($msg)
     {
@@ -473,7 +478,7 @@ class Cleantalk
         $msg->all_headers = ! empty($ct_tmp) ? json_encode($ct_tmp) : '';
 
         // Using current server without changing it
-        if ( false && ( ! empty($this->work_url) && ($this->server_changed + $this->server_ttl > time())) ) {
+        if ( ! empty($this->work_url) && ($this->server_changed + $this->server_ttl > time()) ) {
             $url    = ! empty($this->work_url) ? $this->work_url : $this->server_url;
             $result = $this->sendRequest($msg, $url, $this->server_timeout);
         } else {
@@ -481,7 +486,7 @@ class Cleantalk
         }
 
         // Changing server
-        if ( true || ($result === false || $result->errno != 0) ) {
+        if ($result === false || $result->errno != 0) {
             // Split server url to parts
             preg_match("@^(https?://)([^/:]+)(.*)@i", $this->server_url, $matches);
 
@@ -490,7 +495,7 @@ class Cleantalk
             $url_suffix = isset($matches[3]) ? $matches[3] : '';
 
             if ( empty($url_host) ) {
-                return false;
+                throw TransportException::fromUrlHostError($url_host);
             } elseif ( null !== $servers = $this->get_servers_ip($url_host) ) {
                 // Loop until find work server
                 foreach ( $servers as $server ) {
@@ -516,13 +521,13 @@ class Cleantalk
 
         if ( ! empty($this->data_codepage) && $this->data_codepage !== 'UTF-8' ) {
             if ( ! empty($response->comment) ) {
-                $response->comment = $this->stringFromUTF8($response->comment, $this->data_codepage);
+                $response->comment = CleantalkHelper::stringFromUTF8($response->comment, $this->data_codepage);
             }
             if ( ! empty($response->errstr) ) {
-                $response->errstr = $this->stringFromUTF8($response->errstr, $this->data_codepage);
+                $response->errstr = CleantalkHelper::stringFromUTF8($response->errstr, $this->data_codepage);
             }
             if ( ! empty($response->sms_error_text) ) {
-                $response->sms_error_text = $this->stringFromUTF8($response->sms_error_text, $this->data_codepage);
+                $response->sms_error_text = CleantalkHelper::stringFromUTF8($response->sms_error_text, $this->data_codepage);
             }
         }
 
@@ -534,7 +539,7 @@ class Cleantalk
      *
      * @param $host
      *
-     * @return array
+     * @return array|null
      */
     private function get_servers_ip($host) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
@@ -577,7 +582,7 @@ class Cleantalk
             );
             // If records recieved
         } else {
-            $tmp               = null;
+            $tmp               = array();
             $fast_server_found = false;
 
             foreach ( $servers as $server ) {
@@ -593,10 +598,8 @@ class Cleantalk
                 $fast_server_found = $ping < $this->min_server_timeout ? true : false;
             }
 
-            if ( count($tmp) ) {
-                ksort($tmp);
-                $response = $tmp;
-            }
+            ksort($tmp);
+            $response = $tmp;
         }
 
         return empty($response) ? null : $response;
@@ -605,7 +608,7 @@ class Cleantalk
     /**
      * Function to check response time
      * param string
-     * @return int
+     * @return float
      */
     private function httpPing($host)
     {

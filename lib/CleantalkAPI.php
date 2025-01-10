@@ -7,81 +7,13 @@ class CleantalkAPI
     const URL = 'https://api.cleantalk.org';
 
     /**
-     * Wrapper for sfw_logs API method
-     *
-     * @param integer connect timeout
-     *
-     * @return type
-     * returns mixed STRING || array('error' => true, 'error_string' => STRING)
-     */
-    public static function method__sfw_logs($api_key, $data, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'auth_key'    => $api_key,
-            'method_name' => 'sfw_logs',
-            'data'        => json_encode($data),
-            'rows'        => count($data),
-            'timestamp'   => time()
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result, 'sfw_logs') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets spam report
-     *
-     * @param string website host
-     * @param integer report days
-     *
-     * @return type
-     */
-    public static function method__spam_check_cms($api_key, $data, $date = null, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'method_name' => 'spam_check_cms',
-            'auth_key'    => $api_key,
-            'data'        => is_array($data) ? implode(',', $data) : $data,
-        );
-
-        if ( $date ) {
-            $request['date'] = $date;
-        }
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result, 'spam_check_cms') : $result;
-
-        return $result;
-    }
-
-    /*
-    * Wrapper for 2s_blacklists_db API method
-    *
-    * returns mixed STRING || array('error' => true, 'error_string' => STRING)
-    */
-    public static function method__get_2s_blacklists_db($api_key, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'method_name' => '2s_blacklists_db',
-            'auth_key'    => $api_key,
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result, '2s_blacklists_db') : $result;
-
-        return $result;
-    }
-
-    /**
      * Function gets access key automatically
      *
-     * @param string website admin email
-     * @param string website host
-     * @param string website platform
+     * @param string $email website admin email
+     * @param string $host website host
+     * @param string $platform website platform
      *
-     * @return type
+     * @return string
      */
     public static function method__get_api_key( // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
         $email,
@@ -116,12 +48,13 @@ class CleantalkAPI
     /**
      * Function gets spam report
      *
-     * @param string website host
-     * @param integer report days
+     * @param string $host website host
+     * @param integer $period report days
+     * @param bool $do_check do_check
      *
-     * @return type
+     * @return string
      */
-    public static function method__get_antispam_report($host, $period = 1) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public static function method__get_antispam_report($host, $period = 1, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $request = array(
             'method_name' => 'get_antispam_report',
@@ -138,10 +71,10 @@ class CleantalkAPI
     /**
      * Function gets spam statistics
      *
-     * @param string website host
-     * @param integer report days
+     * @param string $api_key
+     * @param bool $do_check
      *
-     * @return type
+     * @return string
      */
     public static function method__get_antispam_report_breif($api_key, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
@@ -159,11 +92,13 @@ class CleantalkAPI
     /**
      * Function gets information about renew notice
      *
-     * @param string api_key
+     * @param string $api_key
+     * @param string $path_to_cms
+     * @param bool $do_check
      *
-     * @return type
+     * @return string
      */
-    public static function method__notice_validate_key($api_key, $path_to_cms, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public static function method__notice_validate_key($api_key = '', $path_to_cms = '', $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $request = array(
             'method_name' => 'notice_validate_key',
@@ -182,7 +117,7 @@ class CleantalkAPI
      *
      * @param string api_key
      *
-     * @return type
+     * @return string
      */
     public static function method__notice_paid_till($api_key, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
@@ -197,193 +132,15 @@ class CleantalkAPI
         return $result;
     }
 
-    public static function method__security_logs($api_key, $data, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'auth_key'    => $api_key,
-            'method_name' => 'security_logs',
-            'timestamp'   => current_time('timestamp'),
-            'data'        => json_encode($data),
-            'rows'        => count($data),
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_logs__sendFWData($api_key, $data, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'auth_key'    => $api_key,
-            'method_name' => 'security_logs',
-            'timestamp'   => current_time('timestamp'),
-            'data_fw'     => json_encode($data),
-            'rows_fw'     => count($data),
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_logs__feedback($api_key, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'auth_key'    => $api_key,
-            'method_name' => 'security_logs',
-            'data'        => '0',
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_firewall_data($api_key, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'auth_key'    => $api_key,
-            'method_name' => 'security_firewall_data',
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_firewall_data_file($api_key, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'auth_key'    => $api_key,
-            'method_name' => 'security_firewall_data_file',
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_linksscan_logs( // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-        $api_key,
-        $scan_time,
-        $scan_result,
-        $links_total,
-        $links_list,
-        $do_check = true
-    ) {
-        $request = array(
-            'auth_key'          => $api_key,
-            'method_name'       => 'security_linksscan_logs',
-            'started'           => $scan_time,
-            'result'            => $scan_result,
-            'total_links_found' => $links_total,
-            'links_list'        => $links_list,
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_mscan_logs( // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-        $api_key,
-        $service_id,
-        $scan_time,
-        $scan_result,
-        $scanned_total,
-        $modified,
-        $unknown,
-        $do_check = true
-    ) {
-        $request = array(
-            'method_name'      => 'security_mscan_logs',
-            'auth_key'         => $api_key,
-            'service_id'       => $service_id,
-            'started'          => $scan_time,
-            'result'           => $scan_result,
-            'total_core_files' => $scanned_total,
-        );
-
-        if ( ! empty($modified) ) {
-            $request['failed_files']      = json_encode($modified);
-            $request['failed_files_rows'] = count($modified);
-        }
-        if ( ! empty($unknown) ) {
-            $request['unknown_files']      = json_encode($unknown);
-            $request['unknown_files_rows'] = count($unknown);
-        }
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    public static function method__security_mscan_files( // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-        $api_key,
-        $file_path,
-        $file,
-        $file_md5,
-        $weak_spots,
-        $do_check = true
-    ) {
-        $request = array(
-            'method_name'    => 'security_mscan_files',
-            'auth_key'       => $api_key,
-            'path_to_sfile'  => $file_path,
-            'attached_sfile' => $file,
-            'md5sum_sfile'   => $file_md5,
-            'dangerous_code' => $weak_spots,
-        );
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result) : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets spam domains report
-     *
-     * @param string api key
-     * @param integer report days
-     *
-     * @return type
-     */
-    public static function method__backlinks_check_cms($api_key, $data, $date = null, $do_check = true) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    {
-        $request = array(
-            'method_name' => 'backlinks_check_cms',
-            'auth_key'    => $api_key,
-            'data'        => is_array($data) ? implode(',', $data) : $data,
-        );
-
-        if ( $date ) {
-            $request['date'] = $date;
-        }
-
-        $result = self::send_request($request);
-        $result = $do_check ? self::check_response($result, 'backlinks_check_cms') : $result;
-
-        return $result;
-    }
-
     /**
      * Function sends raw request to API server
      *
-     * @param string url of API server
-     * @param array data to send
-     * @param boolean is data have to be JSON encoded or not
-     * @param integer connect timeout
-     *
-     * @return type
+     * @param array $data to send
+     * @param string $url of API server
+     * @param int $timeout is data have to be JSON encoded or not
+     * @param bool $ssl should use ssl
+     * @psalm-suppress PossiblyUnusedParam
+     * @return string JSON encoded string
      */
     public static function send_request($data, $url = self::URL, $timeout = 5, $ssl = false) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
@@ -445,13 +202,14 @@ class CleantalkAPI
                 )
             );
             $context = stream_context_create($opts);
-            $result  = file_get_contents($url, 0, $context);
+            $result  = file_get_contents($url, false, $context);
         } else {
             $errors .= '_AND_ALLOW_URL_FOPEN_IS_DISABLED';
         }
 
         if ( empty($result) && ! empty($errors) ) {
-            return json_encode(array('error' => true, 'error_string' => $errors));
+            $json_error = json_encode(array('error' => true, 'error_string' => $errors));
+            return false !== $json_error ? $json_error : 'CURL_ERROR';
         }
 
         return $result;
@@ -460,14 +218,14 @@ class CleantalkAPI
     /**
      * Function checks server response
      *
-     * @param string result
-     * @param string request_method
+     * @param string $result
+     * @param string|null $method_name
      *
-     * @return mixed (array || array('error' => true))
+     * @return string JSON encoded string
      */
     public static function check_response($result, $method_name = null) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
-        $out = array();
+        $out = array('error' => false);
 
         // Errors handling
 
@@ -506,8 +264,8 @@ class CleantalkAPI
             );
         }
 
-        // Pathces for different methods
-        if ( empty($out['error']) ) {
+        // Patches for different methods
+        if ( !$out['error'] ) {
             // mehod_name = notice_validate_key
             if ( $method_name == 'notice_validate_key' && isset($result['valid']) ) {
                 $out = $result;
@@ -519,9 +277,9 @@ class CleantalkAPI
             }
         }
 
-        // mehod_name = get_antispam_report_breif
+        // method_name = get_antispam_report_breif
         if ( $method_name == 'get_antispam_report_breif' ) {
-            if ( empty($out['error']) ) {
+            if ( !$out['error'] ) {
                 $result = $result['data'];
             }
 
@@ -534,6 +292,8 @@ class CleantalkAPI
             $out                    = array_merge($result, $out);
         }
 
-        return $out;
+        $out = json_encode($out);
+
+        return false !== $out ? $out : 'JSON_ENCODE_ERROR';
     }
 }
