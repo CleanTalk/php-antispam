@@ -1,4 +1,8 @@
 <?php
+
+use Cleantalk\Cleantalk;
+use Cleantalk\CleantalkRequest;
+
 require_once "lib/Cleantalk.php";
 require_once "lib/CleantalkRequest.php";
 require_once "lib/CleantalkResponse.php";
@@ -6,10 +10,8 @@ require_once "lib/CleantalkHelper.php";
 require_once "lib/CleantalkAPI.php";
 require_once "lib/cleantalk-php-patch.php";
 
-use lib\Cleantalk;
-use lib\CleantalkRequest;
 
-class CleantalkTest extends \PHPUnit\Framework\TestCase 
+class CleantalkTest extends \PHPUnit\Framework\TestCase
 {
 	protected $ct;
 
@@ -28,7 +30,7 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->ct_request->sender_email = 's@cleantalk.org';
 		$this->ct_request->message = 'stop_word bad message';
 		$result = $this->ct->isAllowMessage($this->ct_request);
-		$this->assertEquals(0, $result->allow);					
+		$this->assertEquals(0, $result->allow);
 
 		$this->ct_request->message = '';
 		$this->ct_request->sender_email = '';
@@ -41,5 +43,5 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(0, $result->allow);
 
 		$this->ct_request->sender_email = '';
-	}	
+	}
 }
