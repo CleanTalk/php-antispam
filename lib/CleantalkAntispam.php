@@ -24,12 +24,16 @@ class CleantalkAntispam
         $this->type_form       = $type_form;
     }
 
+    /**
+     * @return CleantalkResponse|null
+     * @throws TransportException
+     */
     public function handle()
     {
         if ( count($_POST) === 0 ) {
             $_SESSION['ct_submit_time'] = time();
 
-            return;
+            return null;
         }
 
         $sender_email    = isset($_POST[$this->email_field]) ? $_POST[$this->email_field] : '';

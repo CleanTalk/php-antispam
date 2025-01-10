@@ -92,13 +92,13 @@ class Cleantalk
     public $ssl_path = '';
 
     /**
-     * Minimal server response in miliseconds to catch the server
+     * Minimal server response in milliseconds to catch the server
      *
      */
     public $min_server_timeout = 50;
 
     /**
-     * Maximal server response in miliseconds to catch the server
+     * Maximal server response in milliseconds to catch the server
      *
      */
     public $max_server_timeout = 1500;

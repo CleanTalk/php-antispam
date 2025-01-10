@@ -27,19 +27,21 @@ You can unpack the archive with the plugin to the root of the site or install it
 composer require cleantalk/php-antispam
 ```
    
-### Sample SPAM test for text comment and user signup
+### Sample SPAM test for text comment
+
+Notice: You can use the example PHP file from <code>./examples/form_with_handler</code>
 
 ```php
 <?php
 session_start();
 
-$apikey = 'your_cleantalk_api_key';
+$apikey = '';
 $email_field = 'name_email_form_field';
 $user_name_field = 'name_user_name_form_field';
 $message_field = 'name_message_form_field';
 $type_form = 'contact'; // use 'signup' for user signup form
 
-// if downloaded, unzip and include the app:
+// if downloaded, unzip and include the app, take your own relative path:
 require_once 'php-antispam/cleantalk-antispam.php';
 // if install the app by composer package:
 use Cleantalk\CleantalkAntispam;
@@ -48,6 +50,19 @@ use Cleantalk\CleantalkAntispam;
 
 $cleantalk_antispam = new CleantalkAntispam($apikey, $email_field, $user_name_field, $message_field, $type_form);
 $api_result = $cleantalk_antispam->handle();
+if ($api_result) { // the check fired
+    if ($api_result->account_status !== 1) {
+        // something wrong with your key or license, to know why read $api_result->codes
+        echo 'Allowed. Spam protection disabled.'; // or do nothing
+    } else {
+        if ($api_result->allow === 1) {
+            echo 'Allowed. Spam protection OK.'; // or do nothing
+        } else {
+            die('Blocked. Spam protection OK. Reason: ' . $api_result->comment); // or make your own handler
+        }
+    }
+}
+// your further code flow here
 ?>
 
 <form method="post">

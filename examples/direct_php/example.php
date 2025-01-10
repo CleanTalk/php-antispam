@@ -1,14 +1,9 @@
 <?php
 
-require_once "lib/Cleantalk.php";
-require_once "lib/CleantalkRequest.php";
-require_once "lib/CleantalkResponse.php";
-require_once "lib/CleantalkHelper.php";
-require_once "lib/CleantalkAPI.php";
-require_once "lib/cleantalk-php-patch.php";
+require_once "../../cleantalk-antispam.php";
 
 /**
- * Cleantalk example
+ * Cleantalk PHP example
  *
  * @package Cleantalk Example
  * @copyright (C) 2011 - 2025 CleanTalk team (https://cleantalk.org)
@@ -24,6 +19,10 @@ use Cleantalk\CleantalkAPI;
 // Take params from config
 $config_url = 'https://moderate.cleantalk.org';
 $auth_key   = ''; // Set Cleantalk auth key
+
+/**
+ * Key validation example.
+ */
 $validation = CleantalkAPI::method__notice_validate_key($auth_key, 'php-api');
 $validation = json_decode($validation) ? json_decode($validation) : false;
 $is_valid = is_object($validation) && $validation->valid;
