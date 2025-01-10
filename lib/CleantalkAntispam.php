@@ -45,7 +45,6 @@ class CleantalkAntispam
 		$ct_request->sender_ip = $sender_ip;
 		$ct_request->sender_nickname = $sender_nickname;
 		$ct_request->message = $message;
-		$ct_request->submit_time = time() - (int) $_SESSION['ct_submit_time'];
 		$ct_request->event_token = isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null;
 
 		$ct = new Cleantalk();
@@ -59,22 +58,7 @@ class CleantalkAntispam
 			$ct_result = $ct->isAllowMessage($ct_request);
 		}
 
-		if ($ct_result->allow == 1) {
-			if ($this->type_form === 'signup') {
-				echo 'User allowed. Reason ' . $ct_result->comment;
-			}
-			if ($this->type_form === 'contact') {
-				echo 'Message allowed. Reason ' . $ct_result->comment;
-			}
-		} else {
-			if ($this->type_form === 'signup') {
-				echo 'User forbidden. Reason ' . $ct_result->comment;
-			}
-			if ($this->type_form === 'contact') {
-				echo 'Message forbidden. Reason ' . $ct_result->comment;
-			}
-		}
-		echo '<br /><br />';
+        return $ct_result;
 	}
 
 	public function frontendScript()

@@ -37,8 +37,7 @@ $ct_request->sender_nickname = 'John Dow';
 $ct_request->example = str_repeat('Just text ', 10);
 $ct_request->agent = 'php-api';
 $ct_request->sender_ip = '178.32.183.43';
-$ct_request->js_on = 1; # Site visitor has JavaScript
-$ct_request->submit_time = 12; # Seconds from start form filling till the form POST
+$ct_request->event_token = isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null;
 
 $ct = new Cleantalk();
 $ct->server_url = $config_url;

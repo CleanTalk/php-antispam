@@ -153,7 +153,20 @@ class Cleantalk {
 		
 		return $this->httpRequest( $filtered_request );
 	}
-	
+
+    /**
+     * Function checks if visitor is bot or not based on the Bot-detector event token.
+     *
+     * @param CleantalkRequest $request
+     *
+     * @return CleantalkResponse
+     */
+    public function checkBot( CleantalkRequest $request ){
+        $request          = $this->filterRequest( $request );
+        $filtered_request = $this->createMsg( 'check_bot', $request );
+        return $this->httpRequest( $filtered_request );
+    }
+
 	/**
 	 *  Filter request params
 	 *

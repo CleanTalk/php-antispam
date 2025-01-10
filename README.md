@@ -47,7 +47,7 @@ use Cleantalk\CleantalkAntispam;
 //require_once "lib/cleantalk-php-patch.php"; -- PHP-FPM
 
 $cleantalk_antispam = new CleantalkAntispam($apikey, $email_field, $user_name_field, $message_field, $type_form);
-$cleantalk_antispam->handle();
+$api_result = $cleantalk_antispam->handle();
 ?>
 
 <form method="post">
@@ -67,7 +67,7 @@ $cleantalk_antispam->handle();
 ```
 
 ## API Response description
-API returns PHP object:
+API returns (`$api_result`) PHP object:
   * allow (0|1) - allow to publish or not, in other words spam or ham
   * comment (string) - server comment for requests.
   * id (string MD5 HEX hash) - unique request idenifier.
