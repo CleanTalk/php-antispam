@@ -20,7 +20,7 @@ class CleantalkTest extends \PHPUnit\Framework\TestCase
 	public function setUp()
 	{
 		$this->ct = new Cleantalk();
-		$this->ct->server_url = 'http://moderate.cleantalk.org';
+		$this->ct->server_url = 'https://moderate.cleantalk.org';
 		$this->ct_request = new CleantalkRequest();
 		$this->ct_request->auth_key = getenv("CLEANTALK_TEST_API_KEY");
 	}

@@ -1,0 +1,48 @@
+name: Auto-Tests (PHPUnit, PHPCS, Psalm) running.
+
+on: # event list
+  push: # on push to each of these branches
+    branches:
+      - dev
+      - fix
+      - master
+  pull_request:
+    branches:
+      - dev
+      - master
+
+env: # environment variables (available in any part of the action)
+  PHP_VERSION: 7.4
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+
+      - name: Code Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: composer i
+
+      - name: Running tests
+        env:
+          CLEANTALK_TEST_API_KEY: ${{ secrets.CLEANTALK_TEST_API_KEY }}
+        run: composer test
+      - name: Telegram notify
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_PLUGINS_TO }}
+          token: ${{ secrets.TELEGRAM_REVIEWER_TOKEN }}
+          message: |
+            Hi, <strong>${{ github.actor }}</strong>! Your commit for <strong>${{ github.repository }}</strong> 
+            contains 💯 the best solution but it have to be fixed!
+            <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Auto-Tests (PHPUnit, PHPCS, Psalm)</a> build failed ⛔!
+          format: html
+          disable_web_page_preview: true

@@ -1,8 +1,8 @@
 php-antispam
 ============
-[![Build Status](https://travis-ci.org/CleanTalk/php-antispam.svg)](https://travis-ci.org/CleanTalk/php-antispam)
+![example workflow](https://github.com/CleanTalk/php-antispam/actions/workflows/tests.yml/badge.svg)
 
-[![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v/stable.svg)](https://packagist.org/packages/cleantalk/php-antispam)
+[![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v)](https://packagist.org/packages/cleantalk/php-antispam)
 
 A PHP API for antispam service cleantalk.org. Invisible protection from spam, no captches, no puzzles, no animals and no math.
 
