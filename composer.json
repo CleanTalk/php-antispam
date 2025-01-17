@@ -14,5 +14,33 @@
         "files": [
             "lib/cleantalk-php-patch.php"
         ]
+    },
+    "require-dev": {
+        "vimeo/psalm": "^4.8",
+        "phpunit/phpunit": "^7.5",
+        "squizlabs/php_codesniffer": "3.*",
+        "phpcompatibility/php-compatibility": "@dev",
+        "yoast/phpunit-polyfills": "^1.0",
+        "ext-dom": "*",
+        "wp-cli/wp-cli-bundle": "*"
+    },
+    "scripts": {
+        "test": [
+            "vendor/bin/phpunit --configuration tests/phpunit.xml",
+            "vendor/bin/phpcs --config-set installed_paths vendor/phpcompatibility/php-compatibility",
+            "vendor/bin/phpcs --standard=tests/.phpcs.xml",
+            "vendor/bin/psalm --no-cache --config=psalm.xml"
+        ],
+        "psalm_l1": [
+            "vendor/bin/psalm --no-cache --config=psalm.xml"
+        ],
+        "just_phpunit": [
+            "vendor/bin/phpunit --configuration tests/phpunit.xml --debug"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }

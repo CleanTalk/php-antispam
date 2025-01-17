@@ -8,6 +8,7 @@ class TransportException extends Exception
 {
     /**
      * @param string $url
+     *
      * @return self
      */
     public static function fromUrlHostError($url_host)

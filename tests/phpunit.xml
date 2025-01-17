@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<phpunit color="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         stopOnFailures="true"
-         syntaxCheck="false"
-         strict="true"
-         >
+<phpunit
+        colors="true"
+        convertErrorsToExceptions="true"
+        convertNoticesToExceptions="true"
+        convertWarningsToExceptions="true"
+        stopOnFailure="true"
+        beStrictAboutOutputDuringTests="true"
+>
     <testsuites>
         <testsuite name="Unit Tests">
             <directory>./</directory>

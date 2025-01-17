@@ -1,4 +1,5 @@
 <?php
+
 namespace Cleantalk;
 
 /**
@@ -6,37 +7,37 @@ namespace Cleantalk;
  */
 class CleantalkRequest
 {
-	const CLEANTALK_API_URL = 'https://moderate.cleantalk.org/api2.0/';
+    const CLEANTALK_API_URL = 'https://moderate.cleantalk.org/api2.0/';
 
-     /**
+    /**
      *  All http request headers
      * @var string
      */
-     public $all_headers = null;
-     
-     /**
+    public $all_headers = null;
+
+    /**
      *  IP address of connection
      * @var string
      */
-     //public $remote_addr = null;
-     
-     /**
+    public $remote_addr = null;
+
+    /**
      *  Last error number
      * @var integer
      */
-     public $last_error_no = null;
-     
-     /**
+    public $last_error_no = null;
+
+    /**
      *  Last error time
      * @var integer
      */
-     public $last_error_time = null;
-     
-     /**
+    public $last_error_time = null;
+
+    /**
      *  Last error text
      * @var string
      */
-     public $last_error_text = null;
+    public $last_error_text = null;
 
     /**
      * User message
@@ -118,8 +119,13 @@ class CleantalkRequest
      * @var int
      */
     public $submit_time = null;
-    
+    /**
+     * @var string
+     */
     public $x_forwarded_for = '';
+    /**
+     * @var string
+     */
     public $x_real_ip = '';
 
     /**
@@ -130,38 +136,44 @@ class CleantalkRequest
 
     /**
      * Feedback string,
-     * valid are 'requset_id:(1|0)'
+     * valid are 'request_id:(1|0)'
      * @var string
      */
-    public $feedback = null;
+    public $feedback;
 
     /**
      * Phone number
-     * @var type 
+     * @var string
+     * @deprecated
      */
-    public $phone = null;
-    
+    public $phone;
+
     /**
-    * Method name
-    * @var string
-    */
+     * Method name
+     * @var string
+     */
     public $method_name = 'check_message';
 
-	/**
-	 * @var string|null
-	 */
-	public $event_token;
+    /**
+     * @var string|null
+     */
+    public $event_token;
+    /**
+     * @var int
+     */
+    public $js_on;
 
     /**
      * Fill params with constructor
-     * @param type $params
+     *
+     * @param $params array|null
      */
-    public function __construct($params = null) {
-        if (is_array($params) && count($params) > 0) {
-            foreach ($params as $param => $value) {
+    public function __construct($params = null)
+    {
+        if ( is_array($params) && count($params) > 0 ) {
+            foreach ( $params as $param => $value ) {
                 $this->{$param} = $value;
             }
         }
     }
-
 }
