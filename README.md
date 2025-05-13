@@ -4,91 +4,68 @@ php-antispam
 
 [![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v)](https://packagist.org/packages/cleantalk/php-antispam)
 
-A PHP API for antispam service cleantalk.org. Invisible protection from spam, no captches, no puzzles, no animals and no math.
+## The  Invisible protection from spam, no captches, no puzzles, no animals and no math.
+_API for antispam service cleantalk.org_
 
-## How API stops spam?
-API uses several simple tests to stop spammers.
-  * Spam bots signatures.
-  * Blacklists checks by Email, IP, web-sites domain names.
-  * JavaScript availability.
-  * Relevance test for the comment.
+#### Requirements
+* PHP 5.6 and above 
+* CURL support 
 
-## How API works?
-API sends a comment's text and several previous approved comments to the servers. Servers evaluates the relevance of the comment's text on the topic, tests on spam and finaly provides a solution - to publish or put on manual moderation of comments. If a comment is placed on manual moderation, the plugin adds to the text of a comment explaining the reason for the ban server publishing.
+### How we stop spam?
+Cleantalk catch your api request and provides analytical result to you.
 
-## Requirements
+You are free to do anything with spam, or just allow as to block spam (we will interrupt desirable request).
 
-   * PHP 5.6 and above 
-   * CURL support 
 
-You can unpack the archive with the plugin to the root of the site or install it using the composer
+## Interesting? Let's make some settings (it will take few minutes)
 
+
+### Step 1 - install our SDK (2 variants ability)
+
+Through composer install **OR** through download zip arhive and unzip it to root directory (with your index.php)
 ```php
 composer require cleantalk/php-antispam
 ```
-   
-### Sample SPAM test for text comment
 
-Notice: You can use the example PHP file from <code>./examples/form_with_handler</code>
+
+### Step 2 - add CleantalkAntispam handler (middleware/interception) to your form handler (action)
 
 ```php
-<?php
-session_start();
-
-$apikey = '';
-$email_field = 'name_email_form_field';
-$user_name_field = 'name_user_name_form_field';
-$message_field = 'name_message_form_field';
-$type_form = 'contact'; // use 'signup' for user signup form
-
-// if downloaded, unzip and include the app, take your own relative path:
-require_once 'php-antispam/cleantalk-antispam.php';
-// if install the app by composer package:
-use Cleantalk\CleantalkAntispam;
-
-//require_once "lib/cleantalk-php-patch.php"; -- PHP-FPM
-
-$cleantalk_antispam = new CleantalkAntispam($apikey, $email_field, $user_name_field, $message_field, $type_form);
+$apikey = ''; // get it here cleantalk.org (free trial)
+$email_field = $_POST['email']; // get it from your form
+$cleantalk_antispam = new CleantalkAntispam($apikey, $email_field);
 $api_result = $cleantalk_antispam->handle();
-if ($api_result) { // the check fired
-    if ($api_result->account_status !== 1) {
-        // something wrong with your key or license, to know why read $api_result->codes
-        echo 'Allowed. Spam protection disabled.'; // or do nothing
-    } else {
-        if ($api_result->allow === 1) {
-            echo 'Allowed. Spam protection OK.'; // or do nothing
-        } else {
-            die('Blocked. Spam protection OK. Reason: ' . $api_result->comment); // or make your own handler
-        }
-    }
-}
-// your further code flow here
-?>
-
-<form method="post">
-    <label for="login">Login:</label>
-    <input type="text" name="name_user_name_form_field" id="login" />
-    <br />
-    <label for="email">Email:</label>
-    <input type="text" name="name_email_form_field" id="email" value="" />
-    <br />
-    <label for="message">Message:</label>
-    <textarea name="name_message_form_field" id="message"></textarea>
-    <br />
-    <input type="submit" />
-</form>
-
-<?php $cleantalk_antispam->frontendScript(); ?>
 ```
 
-## API Response description
-API returns (`$api_result`) PHP object:
-  * allow (0|1) - allow to publish or not, in other words spam or ham
-  * comment (string) - server comment for requests.
-  * id (string MD5 HEX hash) - unique request idenifier.
-  * errno (int) - error number. errno == 0 if requests successfull.
-  * errstr (string) - comment for error issue, errstr == null if requests successfull.
-  * account_status - 0 account disabled, 1 account enabled, -1 unknown status.
+### Step 2.1 - add js lib to your html template
+```html
+<script src="https://moderate.cleantalk.org/ct-bot-detector-wrapper.js"></script>
+```
+_Need for gathering frontend data._
+
+### Step 3 - do whatever you want with cloud result
+For example add die block for spam.
+```php
+if ($api_result && $api_result->allow === 0) {
+    die('Blocked. Spam protection OK. Reason: ' . $api_result->comment);
+    // or make your own actions/logs/messages ...
+}
+```
+
+### Step 4 (not required) - we prepare for you special troubleshooting method
+To find possible problems, just add follow snippet after getVerdict method.
+```php
+// TROUBLESHOOTING: logging the suggestions
+error_log($cleantalk_antispam->whatsWrong(true));
+```
+In [example file](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php) you can see context.
+
+### Step 5 (not required) - if you have any question, please, feel free to ask it in issue here or in our tiket system
+
+## Examples
+- [api response description](https://github.com/CleanTalk/php-antispam/tree/dev/examples/api_response_description.md)
+- [example with form handler](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php)
+
   
 ## Don't want to deal with all this?
 Universal solution for any CMS or custom website: https://github.com/CleanTalk/php-uni  
