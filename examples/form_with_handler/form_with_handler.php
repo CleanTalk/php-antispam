@@ -1,7 +1,7 @@
 <?php
-require_once 'php-antispam/cleantalk-antispam.php';
+require_once '../../../php-antispam/cleantalk-antispam.php';
 
-use Cleantalk\CleantalkAntispam;
+use CleanTalk\CleantalkAntispam;
 
 ?>
 <!DOCTYPE html>
@@ -119,7 +119,7 @@ use Cleantalk\CleantalkAntispam;
     }
     ?>
 
-    <?php if ($statusMessage): ?>
+    <?php if ($statusMessage) : ?>
         <div class="message <?php echo $messageType; ?>">
             <?php echo htmlspecialchars($statusMessage); ?>
         </div>

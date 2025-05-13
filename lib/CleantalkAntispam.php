@@ -12,7 +12,6 @@ class CleantalkAntispam
     const MODERATE_URL = 'https://moderate.cleantalk.org/api2.0';
     const BOT_DETECTOR_LIBRARY_URL = 'https://moderate.cleantalk.org/ct-bot-detector-wrapper.js';
     const EVENT_TOKEN_FIELD_NAME = 'ct_bot_detector_event_token';
-    const FORM_START_TIME_FIELD_NAME = 'ct_form_start_time';
     const EMAIL_ADDRESS_REGEXP = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
 
     /**
@@ -72,11 +71,6 @@ class CleantalkAntispam
     private $cleantalk_response;
 
     /**
-     * @var int Form start time
-     */
-    private $form_start_time;
-
-    /**
      * @var false|string CleanTalk request data in JSON format
      */
     private $cleantalk_request_data;
@@ -94,6 +88,7 @@ class CleantalkAntispam
      * Constructor for the CleanTalkCheck class.
      *
      * @param string $accessKey Access key for CleanTalk API
+     * @psalm-suppress PossiblyUnusedParam
      */
     public function __construct($accessKey, $email = '', $user_name_field = '', $message_field = '', $type_form = '')
     {
@@ -103,9 +98,6 @@ class CleantalkAntispam
         $this->data_container = $_POST;
         if (isset($this->data_container[static::EVENT_TOKEN_FIELD_NAME])) {
             $this->event_token = $this->data_container[static::EVENT_TOKEN_FIELD_NAME];
-        }
-        if (isset($this->data_container[static::FORM_START_TIME_FIELD_NAME])) {
-            $this->form_start_time = $this->data_container[static::FORM_START_TIME_FIELD_NAME];
         }
         $this->ip = Helper::ipGet();
         if ($email) {
@@ -138,16 +130,8 @@ class CleantalkAntispam
     public static function getFrontendHTMLCode($warn_if_js_disabled = false)
     {
         $warn = $warn_if_js_disabled ? '<noscript><div>Please, enable JavaScript in the browser to process the form</div></noscript>' : '';
-        $submittime_script = '
-        <script>document.addEventListener(
-            "DOMContentLoaded", function() {
-                document.getElementsByName("ct_form_start_time")[0].value = Math.floor(Date.now() / 1000);
-            });
-        </script>
-        <input type="hidden" id="ct_form_start_time" name="ct_form_start_time" value="">
-        ';
-        $html = '<script src="%s"></script>%s%s';
-        return sprintf($html, static::BOT_DETECTOR_LIBRARY_URL, $warn, $submittime_script);
+        $html = '<script src="%s"></script>%s';
+        return sprintf($html, static::BOT_DETECTOR_LIBRARY_URL, $warn);
     }
 
     /**
@@ -167,6 +151,7 @@ class CleantalkAntispam
                             ->setData($this->cleantalk_request_data)
                             ->request();
 
+        /** @psalm-suppress InvalidArgument */
         return new CleantalkResponse(@json_decode($response_raw), null);
     }
 
@@ -185,7 +170,6 @@ class CleantalkAntispam
             'sender_email' => $this->email,
             'sender_ip' => $this->ip,
             'js_on' => !empty($this->event_token) ? 1 : 0,
-            'submit_time' => !empty($this->form_start_time) ? time() - (int)$this->form_start_time : null,
             'event_token' => $this->event_token,
             'agent' => 'php-cleantalk-check',
             'sender_info' => @json_encode(
@@ -345,19 +329,6 @@ class CleantalkAntispam
     }
 
     /**
-     * Set the form start time.
-     *
-     * @param int|null $form_start_time Form start time
-     * @return $this
-     */
-    public function setFormStartTime($form_start_time = null)
-    {
-        $this->fluidCallStack(__FUNCTION__);
-        $this->form_start_time = (int)$form_start_time;
-        return $this;
-    }
-
-    /**
      * Enable blocking of visitors without JavaScript.
      *
      * @return $this
@@ -438,6 +409,7 @@ class CleantalkAntispam
         $this->cleantalk_response = $this->getCleanTalkResponse();
 
         if ($this->cleantalk_response->error) {
+            /** @psalm-suppress InvalidOperand */
             $this->verdict->error = 'CleanTalk moderate server error: ' . $this->cleantalk_response->error;
             return $this->beforeReturnVerdict();
         }
@@ -500,18 +472,6 @@ class CleantalkAntispam
             $this->setImprovementSuggestion(
                 'average',
                 'Please, provide the visitor IP address to improve check quality.',
-                $stack
-            );
-        }
-
-        if (empty($this->form_start_time)) {
-            $fluid_method = 'setFormStartTime';
-            $stack = !$this->fluidCallExist($fluid_method)
-                ? "interface method ->$fluid_method() has not been called, make sure the form data contains the field " . static::FORM_START_TIME_FIELD_NAME
-                : "interface method ->$fluid_method() has been called, but provided var is invalid";
-            $this->setImprovementSuggestion(
-                'critical',
-                'Please, provide the form start time to improve check quality.',
                 $stack
             );
         }
@@ -652,13 +612,15 @@ class CleantalkAntispam
             return @json_encode($array);
         }
 
-        $suggestions = var_export($array['suggestions'], 1);
-        $data  = var_export($array['request_data'], 1);
-        $verdict = var_export($array['verdict'], 1);
+            /** @psalm-suppress InvalidScalarArgument */
+            $suggestions = var_export($array['suggestions'], 1);
+            /** @psalm-suppress InvalidScalarArgument */
+            $data  = var_export($array['request_data'], 1);
+            /** @psalm-suppress InvalidScalarArgument */
+            $verdict = var_export($array['verdict'], 1);
         echo "<div>Suggestions<pre>$suggestions</pre></div>";
         echo "<div>Request Data<pre>$data</pre></div>";
         echo "<div>Verdict<pre>$verdict</pre></div>";
         return '';
     }
-
 }

@@ -258,8 +258,8 @@ class Helper
                         is_string($ip_version) && (
                             self::ipIsPrivateNetwork($out, $ip_version) ||
                             (
-                                $ip_version === self::ipValidate(Server::getString('SERVER_ADDR')) &&
-                                self::ipMaskMatch($out, Server::getString('SERVER_ADDR') . '/24', $ip_version)
+                                $ip_version === self::ipValidate($_SERVER['SERVER_ADDR']) &&
+                                self::ipMaskMatch($out, $_SERVER['SERVER_ADDR'] . '/24', $ip_version)
                             )
                         )
                     )
@@ -516,5 +516,35 @@ class Helper
         }
 
         return $headers;
+    }
+
+    /**
+     * Function convert from UTF8
+     *
+     * @param array|object|string $obj
+     * @param string $data_codepage
+     *
+     * @return mixed (array|object|string)
+     */
+    public static function fromUTF8($obj, $data_codepage = null)
+    {
+        // Array || object
+        if (is_array($obj) || is_object($obj)) {
+            foreach ($obj as $_key => &$val) {
+                $val = self::fromUTF8($val, $data_codepage);
+            }
+            unset($val);
+            //String
+        } else {
+            if ($data_codepage !== null && preg_match('//u', $obj)) {
+                if ( function_exists('mb_convert_encoding') ) {
+                    $obj = mb_convert_encoding($obj, $data_codepage, 'UTF-8');
+                } elseif (version_compare(phpversion(), '8.3', '<')) {
+                    $obj = @utf8_decode($obj);
+                }
+            }
+        }
+
+        return $obj;
     }
 }
