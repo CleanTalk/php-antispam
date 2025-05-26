@@ -4,7 +4,7 @@ php-antispam
 
 [![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v)](https://packagist.org/packages/cleantalk/php-antispam)
 
-## The  Invisible protection from spam, no captches, no puzzles, no animals and no math.
+## The Invisible protection from spam, no captcha, no recaptcha, no puzzles, no math captcha.
 _API for antispam service cleantalk.org_
 
 #### Requirements
@@ -12,7 +12,9 @@ _API for antispam service cleantalk.org_
 * CURL support 
 
 ### How we stop spam?
-Cleantalk catch your api request and provides analytical result to you.
+PHP Anti-Spam library providing invisible spam protection for your websites, registration forms, and comment sections. CleanTalk API offers an effective CAPTCHA alternative that silently blocks spam without interrupting your users' experience.
+
+When users submit forms on your website form, the form data is securely sent to CleanTalk’s cloud servers. CleanTalk analyzes submissions using advanced heuristics. CleanTalk then returns a real-time verdict— legitimate requests or spam.
 
 You are free to do anything with spam, or just allow as to block spam (we will interrupt desirable request).
 
