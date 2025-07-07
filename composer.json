@@ -9,7 +9,7 @@
     "keywords": ["spam", "anti-spam", "antispam", "api"],
     "autoload": {
         "psr-4": {
-            "Cleantalk\\": "lib"
+            "CleanTalk\\": "lib"
         },
         "files": [
             "lib/cleantalk-php-patch.php"

@@ -1,8 +1,8 @@
 <?php
 
-require_once "lib/Cleantalk.php";
-require_once "lib/CleantalkHelper.php";
-require_once "lib/CleantalkRequest.php";
-require_once "lib/CleantalkResponse.php";
-require_once "lib/CleantalkAntispam.php";
-require_once "lib/CleantalkAPI.php";
+require_once 'lib/HTTP/Helper.php';
+require_once 'lib/HTTP/Request.php';
+require_once 'lib/HTTP/Response.php';
+require_once 'lib/HTTP/CleantalkResponse.php';
+require_once 'lib/CleantalkVerdict.php';
+require_once 'lib/CleantalkAntispam.php';
