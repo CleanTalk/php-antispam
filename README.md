@@ -18,6 +18,15 @@ When users submit forms on your website form, the form data is securely sent to 
 
 You are free to do anything with spam, or just allow as to block spam (we will interrupt desirable request).
 
+## CleanTalk vs CAPTCHA
+| Feature             | CleanTalk Anti-Spam               | Traditional CAPTCHA                  |
+|---------------------|-----------------------------------|--------------------------------------|
+| User Interaction    | 100% invisible to users           | Requires solving puzzles or clicks   |
+| Form Compatibility  | Works with any PHP form           | Often requires additional scripts    |
+| Speed               | Instant cloud check               | Slower due to user interaction       |
+| Accessibility       | Fully accessible, no visual tests | Often inaccessible to screen readers |
+
+>  CleanTalk is a **PHP spam filter** and a **captcha-free alternative** that boosts UX and protects your forms with zero friction.
 
 ## Interesting? Let's make some settings (it will take few minutes)
 
