@@ -1,4 +1,4 @@
-php-antispam
+# CleanTalk php-antispam: Lightweight Spam Protection for PHP Apps
 ============
 ![example workflow](https://github.com/CleanTalk/php-antispam/actions/workflows/tests.yml/badge.svg)
 
