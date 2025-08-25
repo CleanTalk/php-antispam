@@ -19,6 +19,10 @@ class CleantalkAntispam
      */
     private $access_key;
     /**
+     * @var string Is bot detector included
+     */
+    private $event_token_enabled;
+    /**
      * @var string Event token for CleanTalk API
      */
     private $event_token;
@@ -178,6 +182,9 @@ class CleantalkAntispam
                 )
             ),
         );
+        if ( isset($this->event_token_enabled) ) {
+            $data['event_token_enabled'] = $this->event_token_enabled;
+        }
         return @json_encode($data);
     }
 
@@ -337,6 +344,19 @@ class CleantalkAntispam
     {
         $this->fluidCallStack(__FUNCTION__);
         $this->block_no_js_visitor = true;
+        return $this;
+    }
+
+    /**
+     * Set the event token.
+     *
+     * @param string|null $event_token Event token
+     * @return $this
+     */
+    public function setEventTokenEnabled($event_token_enabled = null)
+    {
+        $this->fluidCallStack(__FUNCTION__);
+        $this->event_token_enabled = $event_token_enabled;
         return $this;
     }
 
