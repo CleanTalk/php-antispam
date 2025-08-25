@@ -41,18 +41,26 @@ composer require cleantalk/php-antispam
 
 ### Step 2 - add CleantalkAntispam handler (middleware/interception) to your form handler (action)
 
-```php
+```php linenums="1"
 $apikey = ''; // get it here cleantalk.org (free trial)
 $email_field = $_POST['email']; // get it from your form
 $cleantalk_antispam = new CleantalkAntispam($apikey, $email_field);
+// Additional parameters here
 $api_result = $cleantalk_antispam->handle();
 ```
 
 ### Step 2.1 - add js lib to your html template
+_Need for gathering frontend data._
 ```html
 <script src="https://moderate.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
 ```
-_Need for gathering frontend data._
+and do not forget to add additional parameter to the request
+```php linenums="3"
+...
+// Additional parameters here
+$cleantalk_antispam->setEventTokenEnabled(1);
+...
+```
 
 ### Step 3 - do whatever you want with cloud result
 For example add die block for spam.
