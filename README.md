@@ -52,7 +52,7 @@ $api_result = $cleantalk_antispam->handle();
 ### Step 2.1 - add js lib to your html template
 _Need for gathering frontend data._
 ```html
-<script src="https://moderate.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
+<script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
 ```
 and do not forget to add additional parameter to the request
 ```php linenums="3"
