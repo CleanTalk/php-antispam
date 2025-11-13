@@ -10,7 +10,7 @@ use CleanTalk\HTTP\Request;
 class CleantalkAntispam
 {
     const MODERATE_URL = 'https://moderate.cleantalk.org/api2.0';
-    const BOT_DETECTOR_LIBRARY_URL = 'https://moderate.cleantalk.org/ct-bot-detector-wrapper.js';
+    const BOT_DETECTOR_LIBRARY_URL = 'https://fd.cleantalk.org/ct-bot-detector-wrapper.js';
     const EVENT_TOKEN_FIELD_NAME = 'ct_bot_detector_event_token';
     const EMAIL_ADDRESS_REGEXP = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
 

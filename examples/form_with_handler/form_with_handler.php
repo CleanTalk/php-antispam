@@ -62,7 +62,7 @@ use CleanTalk\CleantalkAntispam;
     </style>
 
     <!-- CLEANTALK ANTISPAM -->
-    <script src="https://moderate.cleantalk.org/ct-bot-detector-wrapper.js"></script>
+    <script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js"></script>
     <!-- END OF CLEANTALK ANTISPAM -->
 </head>
 <body>
