@@ -250,7 +250,7 @@ class Helper
                 $out = $out ?: self::ipGet('clientside', $v4_only, $headers);
 
                 $ip_version = self::ipValidate($out);
-
+                $platform_server_address = self::getPlatformServerAddr();
                 // Is private network
                 if (
                     ! $out ||
@@ -258,8 +258,8 @@ class Helper
                         is_string($ip_version) && (
                             self::ipIsPrivateNetwork($out, $ip_version) ||
                             (
-                                $ip_version === self::ipValidate($_SERVER['SERVER_ADDR']) &&
-                                self::ipMaskMatch($out, $_SERVER['SERVER_ADDR'] . '/24', $ip_version)
+                                $ip_version === self::ipValidate($platform_server_address) &&
+                                self::ipMaskMatch($out, $platform_server_address . '/24', $ip_version)
                             )
                         )
                     )
@@ -546,5 +546,34 @@ class Helper
         }
 
         return $obj;
+    }
+
+    /**
+     * Get server IP address with cross-platform compatibility
+     *
+     * @return string|null
+     */
+    public static function getPlatformServerAddr()
+    {
+        if ( isset($_SERVER['SERVER_ADDR']) && self::ipValidate($_SERVER['SERVER_ADDR'])) {
+            // Any standard case
+            return $_SERVER['SERVER_ADDR'];
+        } elseif ( isset($_SERVER['LOCAL_ADDR']) && self::ipValidate($_SERVER['LOCAL_ADDR'])) {
+            // Windows IIS
+            return $_SERVER['LOCAL_ADDR'];
+        }
+        // Additional fallbacks for other platforms if needed
+        if ( isset($_SERVER['HTTP_HOST']) ) {
+            $http_host = $_SERVER['HTTP_HOST'];
+            // Remove port if present (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+            if (strpos($http_host, ':') !== false) {
+                $http_host = strstr($http_host, ':', true);
+            }
+            if ( self::ipValidate($http_host) ) {
+                return $http_host;
+            }
+        }
+
+        return null;
     }
 }
