@@ -144,7 +144,7 @@ class CleantalkResponse
             preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", htmlspecialchars($obj->errstr)) :
             null;
         $this->stop_words     = isset($obj->stop_words) ? Helper::fromUTF8($obj->stop_words, 'ISO-8859-1') : null;
-        $this->comment        = isset($obj->comment) ? $obj->comment : null;
+        $this->comment        = isset($obj->comment) ? strip_tags(Helper::fromUTF8($obj->comment, 'ISO-8859-1'), '<p><a><br>') : null;
         $this->blacklisted    = isset($obj->blacklisted) ? $obj->blacklisted : null;
         $this->allow          = isset($obj->allow) ? $obj->allow : 1;
         $this->id             = isset($obj->id) ? $obj->id : null;
