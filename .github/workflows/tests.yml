@@ -34,15 +34,14 @@ jobs:
         env:
           CLEANTALK_TEST_API_KEY: ${{ secrets.CLEANTALK_TEST_API_KEY }}
         run: composer test
-      - name: Telegram notify
+      - name: Matrix notify on failure
         if: failure()
-        uses: appleboy/telegram-action@master
+        uses: Glomberg/matrix-messenger-action@master
         with:
-          to: ${{ secrets.TELEGRAM_PLUGINS_TO }}
-          token: ${{ secrets.TELEGRAM_REVIEWER_TOKEN }}
+          server: ${{ secrets.MATRIX_SERVER }}
+          to: ${{ secrets.MATRIX_EXTERNSION_ROOM }}
+          token: ${{ secrets.MATRIX_USER_TOKEN }}
           message: |
             Hi, <strong>${{ github.actor }}</strong>! Your commit for <strong>${{ github.repository }}</strong> 
             contains 💯 the best solution but it have to be fixed!
             <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Auto-Tests (PHPUnit, PHPCS, Psalm)</a> build failed ⛔!
-          format: html
-          disable_web_page_preview: true
