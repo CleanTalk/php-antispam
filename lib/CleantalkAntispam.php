@@ -21,7 +21,7 @@ class CleantalkAntispam
     /**
      * @var string Is bot detector included
      */
-    private $event_token_enabled;
+    private $event_token_enabled = null;
     /**
      * @var string Event token for CleanTalk API
      */
