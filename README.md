@@ -1,5 +1,6 @@
 # CleanTalk php-antispam: Lightweight Spam Protection for PHP Apps
 ============
+
 ![example workflow](https://github.com/CleanTalk/php-antispam/actions/workflows/tests.yml/badge.svg)
 
 [![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v)](https://packagist.org/packages/cleantalk/php-antispam)
@@ -87,4 +88,8 @@ In [example file](https://github.com/CleanTalk/php-antispam/blob/dev/examples/fo
 
   
 ## Don't want to deal with all this?
-Universal solution for any CMS or custom website: https://github.com/CleanTalk/php-uni  
+Universal solution for any CMS or custom website: https://github.com/CleanTalk/php-uni 
+
+### Websites that trust CleanTalk!
+
+![CleanTalk Anti-Spam Rating](https://cleantalk.org/webpack/img/cleantalk_rating.png)
