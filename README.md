@@ -94,4 +94,4 @@ Universal solution for any CMS or custom website: https://github.com/CleanTalk/p
 
 ![CleanTalk Anti-Spam Rating](https://cleantalk.org/webpack/img/cleantalk_rating.png)
 
-CleanTalk as [reCAPCHA alternative](https://cleantalk.org/recaptcha-alternative).
+CleanTalk as [reCAPTCHA alternative](https://cleantalk.org/recaptcha-alternative).
