@@ -8,6 +8,8 @@
 ## The Invisible protection from spam, no captcha, no recaptcha, no puzzles, no math captcha.
 _API for antispam service cleantalk.org_
 
+If you find this project useful, please consider starring ⭐ it on GitHub — it helps us grow and support development!
+
 #### Requirements
 * PHP 5.6 and above 
 * CURL support 
