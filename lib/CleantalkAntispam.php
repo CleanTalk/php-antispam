@@ -164,6 +164,38 @@ class CleantalkAntispam
      *
      * @return string JSON encoded request data
      */
+   /**
+    * Get all HTTP headers from the current request
+    *
+    * @return string JSON encoded headers or empty string if not available
+    */
+   private function getAllHeaders()
+   {
+       // Try apache_request_headers() first
+       $ct_tmp = function_exists('apache_request_headers') ? apache_request_headers() : [];
+
+       // Fallback for Nginx or other servers - parse from $_SERVER
+       if (empty($ct_tmp)) {
+           $ct_tmp = [];
+           foreach ($_SERVER as $key => $value) {
+               if (strpos($key, 'HTTP_') === 0) {
+                   $headerKey = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+                   $ct_tmp[$headerKey] = $value;
+               }
+           }
+       }
+
+       // Wiping session cookies from request
+       $cookie_name = isset($ct_tmp['Cookie']) ? 'Cookie'
+           : (isset($ct_tmp['cookie']) ? 'cookie' : 'COOKIE');
+
+       if (isset($ct_tmp[$cookie_name])) {
+           unset($ct_tmp[$cookie_name]);
+       }
+
+       return !empty($ct_tmp) ? json_encode($ct_tmp) : '';
+   }
+
     private function prepareCleanTalkRequestData()
     {
         $data = array(
@@ -176,6 +208,7 @@ class CleantalkAntispam
             'js_on' => !empty($this->event_token) ? 1 : 0,
             'event_token' => $this->event_token,
             'agent' => 'php-cleantalk-check',
+            'all_headers' => $this->getAllHeaders(),
             'sender_info' => @json_encode(
                 array(
                     'REFFERRER' => !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
