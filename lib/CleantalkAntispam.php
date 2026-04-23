@@ -216,7 +216,17 @@ class CleantalkAntispam
             }
         }
 
-        return !empty($ct_tmp) ? json_encode($ct_tmp) : '';
+        if ( empty($ct_tmp) ) {
+            return '';
+        }
+
+        $json = json_encode($ct_tmp);
+
+        if ( $json === false ) {
+            return '';
+        }
+
+        return $json;
     }
 
     /**
