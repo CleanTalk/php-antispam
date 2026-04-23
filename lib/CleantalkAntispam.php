@@ -160,6 +160,70 @@ class CleantalkAntispam
     }
 
     /**
+     * Get all HTTP headers from the current request
+     *
+     * @return string JSON encoded headers or empty string if not available
+     */
+    private function getAllHeaders()
+    {
+        // Try apache_request_headers() first
+        $ct_tmp = function_exists('apache_request_headers') ? apache_request_headers() : [];
+
+        // Fallback for Nginx or other servers - parse from $_SERVER
+        if ( empty($ct_tmp) ) {
+            $ct_tmp = Helper::httpGetHeaders();
+        }
+
+        // Remove sensitive headers before sending them to the external service.
+        $sensitive_headers = array(
+            'cookie',
+            'set-cookie',
+            'authorization',
+            'proxy-authorization',
+            'x-csrf-token',
+            'x-xsrf-token',
+            'x-api-key',
+            'api-key',
+            'x-auth-token',
+            'x-access-token',
+            'x-forwarded-client-cert',
+        );
+        $sensitive_patterns = array(
+            'token',
+            'secret',
+            'signature',
+            'api-key',
+            'apikey',
+            'auth',
+        );
+        foreach ($ct_tmp as $header_name => $_value) {
+            $normalized_header_name = strtolower($header_name);
+            if (in_array($normalized_header_name, $sensitive_headers, true)) {
+                unset($ct_tmp[$header_name]);
+                continue;
+            }
+            foreach ($sensitive_patterns as $pattern) {
+                if (strpos($normalized_header_name, $pattern) !== false) {
+                    unset($ct_tmp[$header_name]);
+                    break;
+                }
+            }
+        }
+
+        if ( empty($ct_tmp) ) {
+            return '';
+        }
+
+        $json = json_encode($ct_tmp);
+
+        if ( $json === false ) {
+            return '';
+        }
+
+        return $json;
+    }
+
+    /**
      * Prepare the request data for the CleanTalk API.
      *
      * @return string JSON encoded request data
@@ -176,6 +240,7 @@ class CleantalkAntispam
             'js_on' => !empty($this->event_token) ? 1 : 0,
             'event_token' => $this->event_token,
             'agent' => 'php-cleantalk-check',
+            'all_headers' => $this->getAllHeaders(),
             'sender_info' => @json_encode(
                 array(
                     'REFFERRER' => !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
