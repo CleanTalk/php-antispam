@@ -45,3 +45,4 @@ jobs:
             Hi, <strong>${{ github.actor }}</strong>! Your commit for <strong>${{ github.repository }}</strong> 
             contains 💯 the best solution but it have to be fixed!
             <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Auto-Tests (PHPUnit, PHPCS, Psalm)</a> build failed ⛔!
+      

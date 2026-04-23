@@ -4,3 +4,4 @@ composer.lock
 .DS_Store
 .DS_Store?
 *.swp
+/tests/.phpunit.result.cache

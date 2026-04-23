@@ -30,12 +30,6 @@
             "vendor/bin/phpcs --config-set installed_paths vendor/phpcompatibility/php-compatibility",
             "vendor/bin/phpcs --standard=tests/.phpcs.xml",
             "vendor/bin/psalm --no-cache --config=psalm.xml"
-        ],
-        "psalm_l1": [
-            "vendor/bin/psalm --no-cache --config=psalm.xml"
-        ],
-        "just_phpunit": [
-            "vendor/bin/phpunit --configuration tests/phpunit.xml --debug"
         ]
     },
     "config": {
