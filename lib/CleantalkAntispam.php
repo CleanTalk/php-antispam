@@ -170,14 +170,8 @@ class CleantalkAntispam
         $ct_tmp = function_exists('apache_request_headers') ? apache_request_headers() : [];
 
         // Fallback for Nginx or other servers - parse from $_SERVER
-        if (empty($ct_tmp)) {
-            $ct_tmp = [];
-            foreach ($_SERVER as $key => $value) {
-                if (strpos($key, 'HTTP_') === 0) {
-                    $headerKey = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
-                    $ct_tmp[$headerKey] = $value;
-                }
-            }
+        if ( empty($ct_tmp) ) {
+            $ct_tmp = Helper::httpGetHeaders();
         }
 
         // Remove sensitive headers before sending them to the external service.

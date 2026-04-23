@@ -502,11 +502,10 @@ class Helper
                             continue;
                         }
 
-                        $key_parts[$part_index] = function_exists('mb_strtolower') ? mb_strtolower(
-                            $part
-                        ) : strtolower(
-                            $part
-                        );
+                        $key_parts[$part_index] =
+                            function_exists('mb_strtolower')
+                                ? mb_strtolower($part)
+                                : strtolower($part);
                         $key_parts[$part_index][0] = strtoupper($key_parts[$part_index][0]);
                     }
                     $server_key = implode('-', $key_parts);
