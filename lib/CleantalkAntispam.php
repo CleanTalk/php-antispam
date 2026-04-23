@@ -180,12 +180,40 @@ class CleantalkAntispam
             }
         }
 
-        // Wiping session cookies from request
-        $cookie_name = isset($ct_tmp['Cookie']) ? 'Cookie'
-            : (isset($ct_tmp['cookie']) ? 'cookie' : 'COOKIE');
-
-        if (isset($ct_tmp[$cookie_name])) {
-            unset($ct_tmp[$cookie_name]);
+        // Remove sensitive headers before sending them to the external service.
+        $sensitive_headers = array(
+            'cookie',
+            'set-cookie',
+            'authorization',
+            'proxy-authorization',
+            'x-csrf-token',
+            'x-xsrf-token',
+            'x-api-key',
+            'api-key',
+            'x-auth-token',
+            'x-access-token',
+            'x-forwarded-client-cert',
+        );
+        $sensitive_patterns = array(
+            'token',
+            'secret',
+            'signature',
+            'api-key',
+            'apikey',
+            'auth',
+        );
+        foreach ($ct_tmp as $header_name => $_value) {
+            $normalized_header_name = strtolower($header_name);
+            if (in_array($normalized_header_name, $sensitive_headers, true)) {
+                unset($ct_tmp[$header_name]);
+                continue;
+            }
+            foreach ($sensitive_patterns as $pattern) {
+                if (strpos($normalized_header_name, $pattern) !== false) {
+                    unset($ct_tmp[$header_name]);
+                    break;
+                }
+            }
         }
 
         return !empty($ct_tmp) ? json_encode($ct_tmp) : '';
