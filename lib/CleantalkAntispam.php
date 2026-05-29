@@ -134,7 +134,8 @@ class CleantalkAntispam
     public static function getFrontendHTMLCode($warn_if_js_disabled = false)
     {
         $warn = $warn_if_js_disabled ? '<noscript><div>Please, enable JavaScript in the browser to process the form</div></noscript>' : '';
-        $url = static::BOT_DETECTOR_LIBRARY_URL . '?ver=' . gmdate('Ymd');
+        $version = defined('APBCT_VERSION') ? \APBCT_VERSION : '1.0';
+        $url = static::BOT_DETECTOR_LIBRARY_URL . '?version=' . $version;
         $html = '<script src="%s"></script>%s';
         return sprintf($html, $url, $warn);
     }

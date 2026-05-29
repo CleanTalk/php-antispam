@@ -1,5 +1,7 @@
 <?php
 
+const APBCT_VERSION = '4.4';
+
 require_once 'lib/HTTP/Helper.php';
 require_once 'lib/HTTP/Request.php';
 require_once 'lib/HTTP/Response.php';
