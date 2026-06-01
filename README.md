@@ -86,9 +86,5 @@ In [example file](https://github.com/CleanTalk/php-antispam/blob/dev/examples/fo
 - [example with form handler](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php)
 
   
-## Versioning
-
-The library version is defined by the `APBCT_VERSION` constant in [`cleantalk-antispam.php`](cleantalk-antispam.php). Bump it manually in every release commit — it is not updated automatically.
-
 ## Don't want to deal with all this?
 Universal solution for any CMS or custom website: https://github.com/CleanTalk/php-uni  
