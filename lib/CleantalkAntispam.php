@@ -9,6 +9,7 @@ use CleanTalk\HTTP\Request;
 
 class CleantalkAntispam
 {
+    const VERSION = '4.4';
     const MODERATE_URL = 'https://moderate.cleantalk.org/api2.0';
     const BOT_DETECTOR_LIBRARY_URL = 'https://fd.cleantalk.org/ct-bot-detector-wrapper.js';
     const EVENT_TOKEN_FIELD_NAME = 'ct_bot_detector_event_token';
@@ -134,8 +135,9 @@ class CleantalkAntispam
     public static function getFrontendHTMLCode($warn_if_js_disabled = false)
     {
         $warn = $warn_if_js_disabled ? '<noscript><div>Please, enable JavaScript in the browser to process the form</div></noscript>' : '';
+        $url = static::BOT_DETECTOR_LIBRARY_URL . '?version=' . self::VERSION;
         $html = '<script src="%s"></script>%s';
-        return sprintf($html, static::BOT_DETECTOR_LIBRARY_URL, $warn);
+        return sprintf($html, $url, $warn);
     }
 
     /**
