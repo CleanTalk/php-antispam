@@ -5,95 +5,137 @@
 
 [![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v)](https://packagist.org/packages/cleantalk/php-antispam)
 
-## The Invisible protection from spam, no captcha, no recaptcha, no puzzles, no math captcha.
-_API for antispam service cleantalk.org_
+## Invisible spam protection: no CAPTCHA, puzzles, or math tests
 
-If you find this project useful, please consider starring ⭐ it on GitHub — it helps us grow and support development!
+_A PHP client for the CleanTalk anti-spam API_
+
+If you find this project useful, please consider starring it on GitHub ⭐. It helps us improve and maintain the project.
 
 #### Requirements
-* PHP 5.6 and above 
-* CURL support 
 
-### How we stop spam?
-PHP Anti-Spam library providing invisible spam protection for your websites, registration forms, and comment sections. CleanTalk API offers an effective CAPTCHA alternative that silently blocks spam without interrupting your users' experience.
+* PHP 5.6 or later
+* cURL support
 
-When users submit forms on your website form, the form data is securely sent to CleanTalk’s cloud servers. CleanTalk analyzes submissions using advanced heuristics. CleanTalk then returns a real-time verdict— legitimate requests or spam.
+### How does it stop spam?
 
-You are free to do anything with spam, or just allow as to block spam (we will interrupt desirable request).
+This PHP library provides invisible spam protection for websites, registration forms, and comment sections. The CleanTalk API is a CAPTCHA alternative that detects spam without interrupting your users.
+
+When a user submits a form, the library securely sends the form data to CleanTalk's cloud servers for analysis. CleanTalk then returns a real-time verdict identifying the submission as legitimate or spam. Your application decides how to handle that verdict.
 
 ## CleanTalk vs CAPTCHA
-| Feature             | CleanTalk Anti-Spam               | Traditional CAPTCHA                  |
-|---------------------|-----------------------------------|--------------------------------------|
-| User Interaction    | 100% invisible to users           | Requires solving puzzles or clicks   |
-| Form Compatibility  | Works with any PHP form           | Often requires additional scripts    |
-| Speed               | Instant cloud check               | Slower due to user interaction       |
-| Accessibility       | Fully accessible, no visual tests | Often inaccessible to screen readers |
+| Feature             | CleanTalk Anti-Spam               | Traditional CAPTCHA                      |
+|---------------------|-----------------------------------|------------------------------------------|
+| User Interaction    | 100% invisible to users           | Requires solving puzzles or clicks       |
+| Form Compatibility  | Works with any PHP form           | Often requires additional scripts        |
+| Speed               | Instant cloud check               | Slower due to user interaction           |
+| Accessibility       | No visual tests                   | Can be difficult for screen-reader users |
 
->  CleanTalk is a **PHP spam filter** and a **captcha-free alternative** that boosts UX and protects your forms with zero friction.
+> CleanTalk is a **PHP spam filter** and **CAPTCHA-free alternative** that protects your forms without adding friction for users.
 
-## Interesting? Let's make some settings (it will take few minutes)
+## Getting started
 
+Setup takes only a few minutes.
 
-### Step 1 - install our SDK (2 variants ability)
+### Step 1: install the SDK
 
-Through composer install **OR** through download zip arhive and unzip it to root directory (with your index.php)
-```php
+Install the SDK with Composer:
+
+```bash
 composer require cleantalk/php-antispam
 ```
 
+Alternatively, download the ZIP archive and extract it into your project directory.
 
-### Step 2 - add CleantalkAntispam handler (middleware/interception) to your form handler (action)
+### Step 2: configure your API key
+
+First, copy your API key from your [CleanTalk dashboard](https://cleantalk.org/my/).
+
+Make it available to PHP as an environment variable:
+
+| Name | Value |
+|---|---|
+| `CLEANTALK_API_KEY` | Your CleanTalk API key |
+
+On managed hosting, add it in the **Environment variables** or **Secrets** section of your hosting control panel, then restart the application if required.
+
+If your application already loads a `.env` file, add:
+
+```dotenv
+CLEANTALK_API_KEY=your-api-key
+```
+
+PHP does not load `.env` files by itself; this option works only when your application or framework includes a dotenv loader. Do not put the API key in your PHP files or commit it to source control.
+
+### Step 3: add the CleanTalk handler to your form handler
+
+Add the handler to your PHP code:
 
 ```php linenums="1"
-$apikey = ''; // get it here cleantalk.org (free trial)
-$email_field = $_POST['email']; // get it from your form
-$cleantalk_antispam = new CleantalkAntispam($apikey, $email_field);
-// Additional parameters here
+$api_key = getenv('CLEANTALK_API_KEY');
+if (empty($api_key)) {
+    throw new RuntimeException('CLEANTALK_API_KEY is not configured');
+}
+
+$email_field = $_POST['email']; // Get this value from your form.
+$cleantalk_antispam = new CleantalkAntispam($api_key, $email_field);
+// Set additional parameters here.
 $api_result = $cleantalk_antispam->handle();
 ```
 
-### Step 2.1 - add js lib to your html template
-_Need for gathering frontend data._
+### Step 4: add the JavaScript library to your HTML template
+
+The library collects frontend data used for bot detection.
+
 ```html
 <script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
 ```
-and do not forget to add additional parameter to the request
+
+Enable the event token in your PHP handler:
+
 ```php linenums="3"
 ...
-// Additional parameters here
+// Set additional parameters here.
 $cleantalk_antispam->setEventTokenEnabled(1);
 ...
 ```
 
-### Step 3 - do whatever you want with cloud result
-For example add die block for spam.
+### Step 5: handle the API verdict
+
+For example, stop processing when CleanTalk identifies a submission as spam:
+
 ```php
 if ($api_result && $api_result->allow === 0) {
     die('Blocked. Spam protection OK. Reason: ' . $api_result->comment);
-    // or make your own actions/logs/messages ...
+    // Or add your own actions, logs, or messages.
 }
 ```
 
-### Step 4 (not required) - we prepare for you special troubleshooting method
-To find possible problems, just add follow snippet after getVerdict method.
+### Step 6 (optional): troubleshoot the integration
+
+To identify possible configuration problems, log the improvement suggestions after calling `handle()`:
+
 ```php
-// TROUBLESHOOTING: logging the suggestions
+// Troubleshooting: log improvement suggestions.
 error_log($cleantalk_antispam->whatsWrong(true));
 ```
-In [example file](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php) you can see context.
 
-### Step 5 (not required) - if you have any question, please, feel free to ask it in issue here or in our tiket system
+See the [complete form-handler example](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php) for context.
+
+### Step 7 (optional): get help
+
+If you have questions, open a GitHub issue or contact us through our ticket system.
 
 ## Examples
-- [api response description](https://github.com/CleanTalk/php-antispam/tree/dev/examples/api_response_description.md)
-- [example with form handler](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php)
 
-  
-## Don't want to deal with all this?
-Universal solution for any CMS or custom website: https://github.com/CleanTalk/php-uni 
+* [API response description](https://github.com/CleanTalk/php-antispam/tree/dev/examples/api_response_description.md)
+* [Form-handler example](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php)
+
+## Looking for a universal integration?
+
+See [php-uni](https://github.com/CleanTalk/php-uni) for a universal solution for CMS platforms and custom websites.
 
 ### Websites that trust CleanTalk!
 
 ![CleanTalk Anti-Spam Rating](https://cleantalk.org/webpack/img/cleantalk_rating.png)
 
-CleanTalk as [reCAPTCHA alternative](https://cleantalk.org/recaptcha-alternative).
+Learn more about CleanTalk as a [reCAPTCHA alternative](https://cleantalk.org/recaptcha-alternative).
