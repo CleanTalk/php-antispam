@@ -76,11 +76,14 @@ if (empty($api_key)) {
     throw new RuntimeException('CLEANTALK_API_KEY is not configured');
 }
 
-$email_field = $_POST['email']; // Get this value from your form.
-$cleantalk_antispam = new CleantalkAntispam($api_key, $email_field);
+$email = $_POST['email']; // Get this value from your form.
+$cleantalk_antispam = (new CleantalkAntispam($api_key))
+    ->setEmail($email);
 // Set additional parameters here.
 $api_result = $cleantalk_antispam->handle();
 ```
+
+See [additional configuration options](readme_additional.md) to select the form type and provide the sender name, message, IP address, and Bot Detector settings.
 
 ### Step 4: add the JavaScript library to your HTML template
 
@@ -118,6 +121,8 @@ To identify possible configuration problems, log the improvement suggestions aft
 // Troubleshooting: log improvement suggestions.
 error_log($cleantalk_antispam->whatsWrong(true));
 ```
+
+The diagnostic output can contain personal data. Use this logging only while troubleshooting and store it in appropriately protected logs.
 
 See the [complete form-handler example](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php) for context.
 
