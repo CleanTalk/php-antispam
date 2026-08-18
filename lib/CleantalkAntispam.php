@@ -114,7 +114,7 @@ class CleantalkAntispam
     private function setEmailAutomatically()
     {
         foreach ($this->data_container as $_key => $value) {
-            if (preg_match(static::EMAIL_ADDRESS_REGEXP, $value)) {
+            if (is_string($value) && preg_match(static::EMAIL_ADDRESS_REGEXP, $value)) {
                 $this->email = $value;
                 break;
             }
