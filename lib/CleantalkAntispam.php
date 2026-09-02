@@ -276,7 +276,7 @@ class CleantalkAntispam
             $this->checkAccessKey();
         } catch (\Exception $e) {
             $this->verdict->error = $e->getMessage();
-            $this->verdict->allow = true;
+            $this->verdict->allow = 1;
         }
 
         try {
@@ -284,10 +284,10 @@ class CleantalkAntispam
         } catch (\Exception $e) {
             if ($this->block_no_js_visitor) {
                 $this->verdict->error = $e->getMessage();
-                $this->verdict->allow = false;
+                $this->verdict->allow = 0;
                 $this->verdict->comment = 'Please, enable JavaScript to process the form.';
             } else {
-                $this->verdict->allow = true;
+                $this->verdict->allow = 1;
             }
         }
     }
@@ -335,6 +335,7 @@ class CleantalkAntispam
      */
     private function beforeReturnVerdict()
     {
+        $this->verdict->allow = (int) (bool) $this->verdict->allow;
         $this->setImprovementSuggestions();
         return $this->verdict;
     }
