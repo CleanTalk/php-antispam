@@ -62,7 +62,7 @@ use CleanTalk\CleantalkAntispam;
     </style>
 
     <!-- CLEANTALK ANTISPAM -->
-    <script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js"></script>
+    <script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
     <!-- END OF CLEANTALK ANTISPAM -->
 </head>
 <body>
@@ -94,17 +94,25 @@ use CleanTalk\CleantalkAntispam;
 
         // HANDLE CLEANTALK ANTISPAM
         if ($messageType !== 'error') {
-            $apikey = ''; // get it here cleantalk.org (free trial)
-            $email_field = $email; // get it from your form
-            $cleantalk_antispam = new CleantalkAntispam($apikey, $email_field);
+            $api_key = getenv('CLEANTALK_API_KEY');
+            if (empty($api_key)) {
+                throw new RuntimeException('CLEANTALK_API_KEY is not configured');
+            }
+
+            $cleantalk_antispam = (new CleantalkAntispam($api_key))
+                ->useContactFormCheck()
+                ->setEmail($email)
+                ->setNickName($name)
+                ->setMessage($message)
+                ->setEventTokenEnabled(1);
             $api_result = $cleantalk_antispam->handle();
             if ($api_result->allow === 0) {
                 $statusMessage = 'Spam detected - ' . $api_result->comment;
                 $messageType = 'error';
             }
 
-            // TROUBLESHOOTING: logging the suggestions
-            error_log($cleantalk_antispam->whatsWrong(true));
+            // Optional troubleshooting only. The output can contain personal data.
+            // error_log($cleantalk_antispam->whatsWrong(true));
         }
         // END OF HANDLE CLEANTALK ANTISPAM
 
