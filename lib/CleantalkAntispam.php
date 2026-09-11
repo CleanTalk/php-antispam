@@ -155,7 +155,14 @@ class CleantalkAntispam
                             ->setData($this->cleantalk_request_data)
                             ->request();
 
-        /** @psalm-suppress InvalidArgument */
+        // Request::request() returns a non-string (array|bool) on cURL/transport failure, json_decode() would throw a TypeError on PHP 8+
+        if (!is_string($response_raw)) {
+            $error = is_array($response_raw) && !empty($response_raw['error'])
+                ? $response_raw['error']
+                : 'Empty or invalid response received from the CleanTalk server';
+            return new CleantalkResponse(null, null, $error);
+        }
+
         return new CleantalkResponse(@json_decode($response_raw), null);
     }
 

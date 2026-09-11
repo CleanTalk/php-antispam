@@ -136,9 +136,11 @@ class CleantalkResponse
      *
      * @param object $obj
      * @param null|string $failed_urls
+     * @param null|string $error Transport/connection level error (e.g. cURL failure), when $obj is unavailable
      */
-    public function __construct($obj = null, $failed_urls = null)
+    public function __construct($obj = null, $failed_urls = null, $error = null)
     {
+        $this->error          = $error;
         $this->errno          = isset($obj->errno) ? $obj->errno : 0;
         $this->errstr         = isset($obj->errstr) ?
             preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", htmlspecialchars($obj->errstr)) :
