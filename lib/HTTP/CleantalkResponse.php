@@ -122,7 +122,7 @@ class CleantalkResponse
     public $codes = array();
 
     /**
-     * @var null|array Contains a error
+     * @var null|string Contains a error
      */
     public $error = null;
 
