@@ -145,7 +145,7 @@ The library also prepares these values automatically:
 
 ## Frontend HTML helper
 
-`CleantalkAntispam::getFrontendHTMLCode()` returns the Bot Detector script tag. Pass `true` to also include a warning for visitors who have disabled JavaScript.
+`CleantalkAntispam::getFrontendHTMLCode()` returns the Bot Detector script tag (currently without a `defer` attribute). Pass `true` to also include a warning for visitors who have disabled JavaScript.
 
 ```php
 echo CleantalkAntispam::getFrontendHTMLCode(true);
