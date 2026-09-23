@@ -139,6 +139,11 @@ If you have questions, open a GitHub issue or contact us through our ticket syst
 
 See [php-uni](https://github.com/CleanTalk/php-uni) for a universal solution for CMS platforms and custom websites.
 
+## Related projects by CleanTalk
+
+- [php-anticrawler](https://github.com/CleanTalk/php-anticrawler) - PHP library that blocks scrapers, SEO crawlers and bad bots by User-Agent, IP block lists and allow lists, with no captcha for real visitors. A good companion to this SDK when bots hit your pages, not only your forms.
+- [anti-ddos-lite](https://github.com/CleanTalk/anti-ddos-lite) - small PHP app that stops HTTP flood and DDoS-like traffic with a JavaScript check.
+
 ### Websites that trust CleanTalk!
 
 ![CleanTalk Anti-Spam Rating](https://cleantalk.org/webpack/img/cleantalk_rating.png)
