@@ -7,7 +7,7 @@
 
 ## Invisible spam protection: no CAPTCHA, puzzles, or math tests
 
-_A PHP client for the CleanTalk anti-spam API_
+_A PHP client for the CleanTalk anti-spam API. Spam protection and a CAPTCHA-free alternative to reCAPTCHA, powered by background scoring that doesn’t interrupt website visitors._
 
 If you find this project useful, please consider starring it on GitHub ⭐. It helps us improve and maintain the project.
 
