@@ -253,13 +253,12 @@ class CleantalkAntispam
      */
     private function isJsCheckPassed()
     {
-        if (empty($_COOKIE[static::JS_CHECK_COOKIE_NAME])) {
-            return false;
-        }
+        $received = 
+            isset($_COOKIE[static::JS_CHECK_COOKIE_NAME]) ?
+            $_COOKIE[static::JS_CHECK_COOKIE_NAME] :
+            null;
 
-        $received = $_COOKIE[static::JS_CHECK_COOKIE_NAME];
-
-        if (!is_string($received)) {
+        if (!is_string($received) || $received === '') {
             return false;
         }
 
