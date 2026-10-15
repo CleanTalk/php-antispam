@@ -9,6 +9,11 @@ class CleantalkVerdict
     public $error = '';
     public $request_link = null;
 
+    /**
+     * @var bool True if the verdict is made locally because the moderate server was unreachable
+     */
+    public $offline = false;
+
     public function getJSON()
     {
         return json_encode($this);
