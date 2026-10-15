@@ -432,7 +432,7 @@ class Request
                 CURLOPT_TIMEOUT        => 50,
                 CURLOPT_LOW_SPEED_TIME => 25,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CONNECTTIMEOUT => 5000,
+                CURLOPT_CONNECTTIMEOUT => 30,
                 CURLOPT_FORBID_REUSE   => true,
                 CURLOPT_USERAGENT      => self::AGENT,
                 CURLOPT_POST           => true,

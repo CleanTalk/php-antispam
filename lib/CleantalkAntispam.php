@@ -115,7 +115,7 @@ class CleantalkAntispam
     private function setEmailAutomatically()
     {
         foreach ($this->data_container as $_key => $value) {
-            if (preg_match(static::EMAIL_ADDRESS_REGEXP, $value)) {
+            if (is_string($value) && preg_match(static::EMAIL_ADDRESS_REGEXP, $value)) {
                 $this->email = $value;
                 break;
             }
@@ -157,7 +157,14 @@ class CleantalkAntispam
                             ->setData($this->cleantalk_request_data)
                             ->request();
 
-        /** @psalm-suppress InvalidArgument */
+        // Request::request() returns a non-string (array|bool) on cURL/transport failure, json_decode() would throw a TypeError on PHP 8+
+        if (!is_string($response_raw)) {
+            $error = is_array($response_raw) && !empty($response_raw['error'])
+                ? $response_raw['error']
+                : 'Empty or invalid response received from the CleanTalk server';
+            return new CleantalkResponse(null, null, $error);
+        }
+
         return new CleantalkResponse(@json_decode($response_raw), null);
     }
 
@@ -278,7 +285,7 @@ class CleantalkAntispam
             $this->checkAccessKey();
         } catch (\Exception $e) {
             $this->verdict->error = $e->getMessage();
-            $this->verdict->allow = true;
+            $this->verdict->allow = 1;
         }
 
         try {
@@ -286,10 +293,10 @@ class CleantalkAntispam
         } catch (\Exception $e) {
             if ($this->block_no_js_visitor) {
                 $this->verdict->error = $e->getMessage();
-                $this->verdict->allow = false;
+                $this->verdict->allow = 0;
                 $this->verdict->comment = 'Please, enable JavaScript to process the form.';
             } else {
-                $this->verdict->allow = true;
+                $this->verdict->allow = 1;
             }
         }
     }
@@ -337,6 +344,7 @@ class CleantalkAntispam
      */
     private function beforeReturnVerdict()
     {
+        $this->verdict->allow = (int) (bool) $this->verdict->allow;
         $this->setImprovementSuggestions();
         return $this->verdict;
     }
