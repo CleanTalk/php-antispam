@@ -11,9 +11,7 @@ use CleanTalk\HTTP\Response;
 class CleantalkAntispam
 {
     const VERSION = '4.4';
-    //const MODERATE_URL = 'https://moderate.cleantalk.org/api2.0';
-    //const MODERATE_URL = 'https://moderate_11111.cleantalk.org/api2.0';
-    const MODERATE_URL = 'https://192.0.2.1/api2.0';
+    const MODERATE_URL = 'https://moderate.cleantalk.org/api2.0';
     const BOT_DETECTOR_LIBRARY_URL = 'https://fd.cleantalk.org/ct-bot-detector-wrapper.js';
     const EVENT_TOKEN_FIELD_NAME = 'ct_bot_detector_event_token';
     const EMAIL_ADDRESS_REGEXP = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
