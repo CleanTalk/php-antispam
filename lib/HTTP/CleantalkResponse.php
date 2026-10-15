@@ -122,7 +122,7 @@ class CleantalkResponse
     public $codes = array();
 
     /**
-     * @var null|array Contains a error
+     * @var null|string Contains a error
      */
     public $error = null;
 
@@ -136,17 +136,19 @@ class CleantalkResponse
      *
      * @param object $obj
      * @param null|string $failed_urls
+     * @param null|string $error Transport/connection level error (e.g. cURL failure), when $obj is unavailable
      */
-    public function __construct($obj = null, $failed_urls = null)
+    public function __construct($obj = null, $failed_urls = null, $error = null)
     {
+        $this->error          = $error;
         $this->errno          = isset($obj->errno) ? $obj->errno : 0;
         $this->errstr         = isset($obj->errstr) ?
             preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", htmlspecialchars($obj->errstr)) :
             null;
         $this->stop_words     = isset($obj->stop_words) ? Helper::fromUTF8($obj->stop_words, 'ISO-8859-1') : null;
-        $this->comment        = isset($obj->comment) ? $obj->comment : null;
+        $this->comment        = isset($obj->comment) ? strip_tags(Helper::fromUTF8($obj->comment, 'ISO-8859-1'), '<p><a><br>') : null;
         $this->blacklisted    = isset($obj->blacklisted) ? $obj->blacklisted : null;
-        $this->allow          = isset($obj->allow) ? $obj->allow : 1;
+        $this->allow          = isset($obj->allow) ? (int) (bool) $obj->allow : 1;
         $this->id             = isset($obj->id) ? $obj->id : null;
         $this->fast_submit    = isset($obj->fast_submit) ? $obj->fast_submit : 0;
         $this->spam           = isset($obj->spam) ? $obj->spam : 0;

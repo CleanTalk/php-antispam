@@ -125,7 +125,7 @@ class CleantalkAntispam
     private function setEmailAutomatically()
     {
         foreach ($this->data_container as $_key => $value) {
-            if (preg_match(static::EMAIL_ADDRESS_REGEXP, $value)) {
+            if (is_string($value) && preg_match(static::EMAIL_ADDRESS_REGEXP, $value)) {
                 $this->email = $value;
                 break;
             }
@@ -312,21 +312,25 @@ class CleantalkAntispam
         $response_raw = $http->request();
         $http_code = $http->response instanceof Response ? (int)$http->response->getResponseCode() : 0;
 
-        // Anything but HTTP 200 with a JSON object is treated as the server being unreachable
-        $decoded = $http_code === 200 && is_string($response_raw) ? @json_decode($response_raw) : null;
-        $response = new CleantalkResponse(is_object($decoded) ? $decoded : null, null);
-
-        if (!is_object($decoded)) {
-            if (is_array($response_raw) && !empty($response_raw['error'])) {
-                $response->error = (string)$response_raw['error'];
-            } elseif ($http_code !== 200) {
-                $response->error = 'HTTP code ' . $http_code;
-            } else {
-                $response->error = 'Unexpected response from the moderate server';
-            }
+        // Request::request() returns array|bool on transport failure, json_decode() would throw a TypeError on PHP 8+
+        if (!is_string($response_raw)) {
+            $error = is_array($response_raw) && !empty($response_raw['error'])
+                ? (string)$response_raw['error']
+                : 'Empty or invalid response received from the CleanTalk server';
+            return new CleantalkResponse(null, null, $error);
         }
 
-        return $response;
+        // Anything but HTTP 200 with a JSON object is treated as the server being unreachable
+        if ($http_code !== 200) {
+            return new CleantalkResponse(null, null, 'HTTP code ' . $http_code);
+        }
+
+        $decoded = @json_decode($response_raw);
+        if (!is_object($decoded)) {
+            return new CleantalkResponse(null, null, 'Unexpected response from the moderate server');
+        }
+
+        return new CleantalkResponse($decoded, null);
     }
 
     /**
@@ -446,7 +450,7 @@ class CleantalkAntispam
             $this->checkAccessKey();
         } catch (\Exception $e) {
             $this->verdict->error = $e->getMessage();
-            $this->verdict->allow = true;
+            $this->verdict->allow = 1;
         }
 
         try {
@@ -454,10 +458,10 @@ class CleantalkAntispam
         } catch (\Exception $e) {
             if ($this->block_no_js_visitor) {
                 $this->verdict->error = $e->getMessage();
-                $this->verdict->allow = false;
+                $this->verdict->allow = 0;
                 $this->verdict->comment = 'Please, enable JavaScript to process the form.';
             } else {
-                $this->verdict->allow = true;
+                $this->verdict->allow = 1;
             }
         }
     }
@@ -505,6 +509,7 @@ class CleantalkAntispam
      */
     private function beforeReturnVerdict()
     {
+        $this->verdict->allow = (int) (bool) $this->verdict->allow;
         $this->setImprovementSuggestions();
         return $this->verdict;
     }

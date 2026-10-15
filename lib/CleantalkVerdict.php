@@ -4,7 +4,12 @@ namespace CleanTalk;
 
 class CleantalkVerdict
 {
-    public $allow = true;
+    /**
+     * Whether the request is allowed, 1|0.
+     *
+     * @var int
+     */
+    public $allow = 1;
     public $comment = '';
     public $error = '';
     public $request_link = null;
