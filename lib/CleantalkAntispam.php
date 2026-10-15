@@ -253,7 +253,7 @@ class CleantalkAntispam
      */
     private function isJsCheckPassed()
     {
-        $received = 
+        $received =
             isset($_COOKIE[static::JS_CHECK_COOKIE_NAME]) ?
             $_COOKIE[static::JS_CHECK_COOKIE_NAME] :
             null;
