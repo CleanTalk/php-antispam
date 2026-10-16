@@ -233,6 +233,20 @@ class CleantalkAntispam
     }
 
     /**
+     * Check if the offline protection is set up by the integration.
+     *
+     * The required constants act as the opt-in marker, so integrations made before the offline protection
+     * keep passing requests through when the moderate server is unreachable.
+     *
+     * @return bool
+     */
+    private function isOfflineProtectionConfigured()
+    {
+        return defined('CLEANTALK_SALT') && (string)constant('CLEANTALK_SALT') !== ''
+            && defined('CLEANTALK_ACCOUNT_EMAIL') && (string)constant('CLEANTALK_ACCOUNT_EMAIL') !== '';
+    }
+
+    /**
      * Get the moderate server response timeout in seconds.
      *
      * @return int
@@ -298,13 +312,17 @@ class CleantalkAntispam
     {
         $http = new Request();
         $this->cleantalk_request_data = $this->prepareCleanTalkRequestData();
-        $timeout = $this->getModerateTimeout();
         $http->setUrl(static::MODERATE_URL)
-             ->setData($this->cleantalk_request_data)
-             ->setOptions(array(
-                 CURLOPT_TIMEOUT => $timeout,
-                 CURLOPT_CONNECTTIMEOUT => $timeout,
-             ));
+             ->setData($this->cleantalk_request_data);
+
+        // Without the offline fallback a short timeout would only turn slow answers into errors
+        if ($this->isOfflineProtectionConfigured()) {
+            $timeout = $this->getModerateTimeout();
+            $http->setOptions(array(
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_CONNECTTIMEOUT => $timeout,
+            ));
+        }
 
         $response_raw = $http->request();
         $http_code = $http->response instanceof Response ? (int)$http->response->getResponseCode() : 0;
@@ -672,8 +690,14 @@ class CleantalkAntispam
         $this->cleantalk_response = $this->getCleanTalkResponse();
 
         if ($this->cleantalk_response->error) {
+            if ($this->isOfflineProtectionConfigured()) {
+                /** @psalm-suppress InvalidOperand */
+                $this->applyOfflineVerdict('The moderate server is unreachable: ' . $this->cleantalk_response->error);
+                return $this->beforeReturnVerdict();
+            }
+
             /** @psalm-suppress InvalidOperand */
-            $this->applyOfflineVerdict('The moderate server is unreachable: ' . $this->cleantalk_response->error);
+            $this->verdict->error = 'CleanTalk moderate server error: ' . $this->cleantalk_response->error;
             return $this->beforeReturnVerdict();
         }
 
@@ -825,6 +849,15 @@ class CleantalkAntispam
      */
     private function setOfflineImprovementSuggestions()
     {
+        if (!$this->isOfflineProtectionConfigured() && !$this->isForcedOfflineMode()) {
+            $this->setImprovementSuggestion(
+                'average',
+                'The offline protection is not configured, so every request is passed through while the moderate server is unreachable. Please, define the CLEANTALK_SALT and CLEANTALK_ACCOUNT_EMAIL constants and print getFrontendHTMLCode() with the access key on the page with the form.',
+                'isOfflineProtectionConfigured()'
+            );
+            return;
+        }
+
         if (static::getJsCheckScriptUrl() === null) {
             $this->setImprovementSuggestion(
                 'critical',

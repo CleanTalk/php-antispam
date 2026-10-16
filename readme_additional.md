@@ -64,7 +64,7 @@ The method outputs:
 
 To show a warning to visitors without JavaScript, pass `true` as the second argument: `getFrontendHTMLCode($api_key, true)`.
 
-> The legacy call `getFrontendHTMLCode(true)` without a key still works, but outputs only Bot Detector. Without the JavaScript check script, offline protection will block every visitor.
+> The legacy call `getFrontendHTMLCode(true)` without a key still works, but outputs only Bot Detector. Without the JavaScript check script, offline protection (if enabled) will block every visitor while the cloud is unavailable.
 
 ## Bot Detector and event token
 
@@ -88,13 +88,13 @@ By default, a missing token alone does not block the request. With this method, 
 
 ## Offline protection
 
-If the CleanTalk cloud is unavailable, the library makes the decision itself based on a JavaScript check. Offline protection is always enabled.
+If the CleanTalk cloud is unavailable, the library makes the decision itself based on a JavaScript check. Offline protection is enabled when both `CLEANTALK_SALT` and `CLEANTALK_ACCOUNT_EMAIL` are defined and not empty. Without them, the library works as in previous versions: requests are allowed while the cloud is unavailable, and `verdict->error` contains the reason.
 
 **When it is used.** The cloud did not respond within `CLEANTALK_MODERATE_TIMEOUT` seconds, a connection error occurred, the response code was not HTTP 200, or the response was not valid JSON.
 
 **How the decision is made.** If the `ct_js_check` cookie matches the expected hash, the request is allowed. If the cookie is missing or does not match, the request is blocked. In both cases the verdict has `offline = true`.
 
-> **Behavior change.** Previously, all requests were allowed when the cloud was unavailable. Now they are blocked without a valid cookie, so the JavaScript check script must be set up.
+> **Upgrading.** Existing integrations keep working unchanged. Before defining the constants, print `getFrontendHTMLCode($api_key)` on the form page and make sure `ct-js-check.js` is reachable: otherwise every visitor will be blocked while the cloud is unavailable.
 
 ### Constants
 
@@ -102,11 +102,11 @@ Define them with `define()` before using the library, in code that runs both whe
 
 | Constant | Required | Description | Default |
 |---|---|---|---|
-| `CLEANTALK_ACCOUNT_EMAIL` | yes | CleanTalk account email, used in the hash. | `''` |
-| `CLEANTALK_SALT` | yes | Secret string of at least 32 characters. Without it, the hash depends on the access key only. | `''` |
+| `CLEANTALK_ACCOUNT_EMAIL` | yes | CleanTalk account email, used in the hash. Together with `CLEANTALK_SALT` enables offline protection. | `''` |
+| `CLEANTALK_SALT` | yes | Secret string of at least 32 characters. Together with `CLEANTALK_ACCOUNT_EMAIL` enables offline protection. | `''` |
 | `CLEANTALK_JS_URL` | if the library is outside the web root | Public URL of the directory containing `ct-js-check.js`. | auto-detected |
-| `CLEANTALK_MODERATE_TIMEOUT` | no | Seconds to wait for the cloud. | `2` |
-| `CLEANTALK_OFFLINE_MODE` | no | `true` — never contact the cloud. For testing and emergencies only. | `false` |
+| `CLEANTALK_MODERATE_TIMEOUT` | no | Seconds to wait for the cloud. Applied only when offline protection is enabled. | `2` |
+| `CLEANTALK_OFFLINE_MODE` | no | `true` — never contact the cloud, always decide by the JavaScript check (works even without the constants above). For testing and emergencies only. | `false` |
 
 ### Making `ct-js-check.js` reachable
 
@@ -141,7 +141,7 @@ The library appends the file name and version to the URL itself: `/cleantalk/ct-
 | `comment` | Reason for the decision. |
 | `offline` | `true` if the decision was made locally, without the cloud. |
 | `request_link` | Link to the request in the CleanTalk dashboard (online mode only). |
-| `error` | Error that prevented the check (for example, an empty access key). |
+| `error` | Error that prevented the check (for example, an empty access key), or the cloud error when offline protection is not enabled. |
 
 ## Automatically populated request data
 
@@ -168,7 +168,7 @@ $api_result = $cleantalk_antispam->handle();
 error_log($cleantalk_antispam->whatsWrong(true));
 ```
 
-Offline protection suggestions appear when `ct-js-check.js` is not reachable from the browser, when the decision was made without the cloud, or when the `ct_js_check` cookie did not arrive.
+Offline protection suggestions appear when the protection is not enabled, when `ct-js-check.js` is not reachable from the browser, when the decision was made without the cloud, or when the `ct_js_check` cookie did not arrive.
 
 `getCleanTalkRequestData()` returns the decoded prepared request data for custom diagnostics.
 

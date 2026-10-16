@@ -40,13 +40,13 @@ Without Composer: extract the library archive and include `require_once '/path/t
 
 ## 2. Constants
 
-Define them in a shared settings file that is loaded **both on the form page and in the form handler**: the JavaScript check hash must match in both places.
+Define them in a shared settings file that is loaded **both on the form page and in the form handler**: the JavaScript check hash must match in both places. Defining `CLEANTALK_ACCOUNT_EMAIL` and `CLEANTALK_SALT` enables offline protection: when the cloud is unavailable, visitors without the JavaScript check cookie are blocked. Without these constants, requests are allowed while the cloud is unavailable, as in previous versions.
 
 ```php
 define('CLEANTALK_ACCOUNT_EMAIL', 'you@example.com');                  // required: CleanTalk account email
 define('CLEANTALK_SALT', 'f3c9a1e07b2d4c8e9a6b5d0f1e2c3a4b');          // required: secret string, at least 32 characters
 // define('CLEANTALK_JS_URL', '/cleantalk');                           // if the library is outside the web root (see step 4)
-// define('CLEANTALK_MODERATE_TIMEOUT', 2);                            // cloud timeout, seconds (default 2 sec)
+// define('CLEANTALK_MODERATE_TIMEOUT', 2);                            // cloud timeout, seconds (default 2 sec, applied only with offline protection)
 // define('CLEANTALK_OFFLINE_MODE', true);                             // testing only: never contact the cloud
 ```
 
