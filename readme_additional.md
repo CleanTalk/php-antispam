@@ -2,116 +2,79 @@
 
 Configure the request after creating `CleantalkAntispam` and before calling `handle()`. The configuration methods return the same object, so they can be chained.
 
-Pass actual form values to these methods, not HTML field names. The current constructor uses the access key and the optional second argument as an email address value. The legacy `$user_name_field`, `$message_field`, and `$type_form` constructor arguments are not used by the current implementation. Use the explicit setters below because they make every value sent to CleanTalk clear.
+Pass the **values** of form fields to these methods, not their HTML field names. The constructor accepts the access key and, optionally, the sender email. The `$user_name_field`, `$message_field`, and `$type_form` constructor arguments are deprecated and not used: call the methods described below instead.
 
 ## Contact form example
 
-Assume that `$email`, `$name`, `$subject`, and `$message` contain values that your application has already read and validated.
+Assume that `$email`, `$name`, `$subject`, and `$message` have already been read from the form and validated by your application.
 
 ```php
-$cleantalk_antispam = (new CleantalkAntispam($api_key))
+$api_result = (new CleantalkAntispam($api_key))
     ->useContactFormCheck()
+    ->setEventTokenEnabled(1)
     ->setEmail($email)
     ->setNickName($name)
-    ->setMessage($subject . ': ' . $message);
-
-$api_result = $cleantalk_antispam->handle();
+    ->setMessage($subject . ': ' . $message)
+    ->handle();
 ```
 
-`useContactFormCheck()` uses the CleanTalk [`check_message`](https://cleantalk.org/help/api-check-message) API method. CleanTalk uses this method for contact forms and other user-generated content, including comments and reviews. The library does not send a separate contact-form subtype in the API request.
+`useContactFormCheck()` uses the [`check_message`](https://cleantalk.org/help/api-check-message) API method. It is intended for contact forms, comments, reviews, and other user-generated content.
 
 ## Registration form example
 
-Use the registration check for sign-up, subscription, or similar forms that do not contain a user-written message. See the CleanTalk [`check_newuser`](https://cleantalk.org/help/api-check-newuser) API documentation for the underlying request method.
+For registration, subscription, and similar forms without a message, use the [`check_newuser`](https://cleantalk.org/help/api-check-newuser) API method:
 
 ```php
-$cleantalk_antispam = (new CleantalkAntispam($api_key))
+$api_result = (new CleantalkAntispam($api_key))
     ->useRegistrationCheck()
+    ->setEventTokenEnabled(1)
     ->setEmail($email)
-    ->setNickName($name);
-
-$api_result = $cleantalk_antispam->handle();
+    ->setNickName($name)
+    ->handle();
 ```
 
 ## Sender and form data
 
-### `setEmail($email)`
-
-Sets the sender email address. It is sent to the CleanTalk API as `sender_email`.
-
-```php
-$cleantalk_antispam->setEmail($email);
-```
-
-If no email is provided explicitly, the library attempts to find an email address in `$_POST`. Explicitly passing the validated email value is more reliable.
-
-### `setNickName($nickname)`
-
-Sets the sender name or nickname. It is sent as `sender_nickname` and allows CleanTalk to check the name for spam patterns.
-
-```php
-$cleantalk_antispam->setNickName($name);
-```
-
-### `setMessage($message)`
-
-Sets the user-generated content to check. It is sent as `message` and can contain the message body, subject, or other relevant text fields.
-
-```php
-$cleantalk_antispam->setMessage($subject . ': ' . $message);
-```
-
-### `setIP($ip)`
-
-Overrides the automatically detected sender IP address. Use it only when the application has already determined the original visitor IP, for example behind a trusted proxy.
-
-```php
-$cleantalk_antispam->setIP($visitor_ip);
-```
-
-If the supplied value is not a valid IP address, the library keeps the IP detected from the current request and adds a troubleshooting suggestion.
+| Method | API parameter | Description |
+|---|---|---|
+| `setEmail($email)` | `sender_email` | Sender email address. If not set, the library looks for an email address in `$_POST`. Passing the validated value explicitly is more reliable. |
+| `setNickName($name)` | `sender_nickname` | Sender name or nickname. |
+| `setMessage($text)` | `message` | Text to check: message body, subject, or other text fields. |
+| `setIP($ip)` | `sender_ip` | Overrides the automatically detected IP address. Use it only when your application already knows the real visitor IP (for example, behind a trusted proxy). An invalid IP is ignored and a troubleshooting suggestion is added. |
 
 ## Check type
 
-### `useContactFormCheck()`
+- `useContactFormCheck()` — the `check_message` method: forms with user-written text.
+- `useRegistrationCheck()` — the `check_newuser` method: forms without such text.
 
-Selects the `check_message` API method. Use it for contact forms, comments, reviews, support requests, and other forms containing user-generated text.
+If no type is selected, `handle()` uses `check_message` when the message is not empty and `check_newuser` otherwise. Selecting the type explicitly is recommended.
 
-```php
-$cleantalk_antispam->useContactFormCheck();
-```
+## Scripts on the form page
 
-### `useRegistrationCheck()`
-
-Selects the `check_newuser` API method. Use it for registrations, subscriptions, and forms where there is no user-written message to inspect.
+Print the library HTML code on the page with the form, passing **the same access key** as in the form handler:
 
 ```php
-$cleantalk_antispam->useRegistrationCheck();
+echo CleantalkAntispam::getFrontendHTMLCode($api_key);
 ```
 
-If neither method is selected, `handle()` chooses `check_message` when a non-empty message has been set and `check_newuser` otherwise. Selecting the intended check explicitly is recommended.
+The method outputs:
+
+1. **Bot Detector** (`fd.cleantalk.org/ct-bot-detector-wrapper.js`), which adds an event token to the form data.
+2. **JavaScript check script** (`ct-js-check.js`), which stores the hash for [offline protection](#offline-protection) in the `ct_js_check` cookie.
+
+To show a warning to visitors without JavaScript, pass `true` as the second argument: `getFrontendHTMLCode($api_key, true)`.
+
+> The legacy call `getFrontendHTMLCode(true)` without a key still works, but outputs only Bot Detector. Without the JavaScript check script, offline protection (if enabled) will block every visitor while the cloud is unavailable.
 
 ## Bot Detector and event token
 
-Add the Bot Detector script to the HTML page containing the form:
-
-```html
-<script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
-```
-
 ### `setEventTokenEnabled(1)`
 
-When the Bot Detector script is installed for the form, enable event-token processing in the PHP request:
-
-```php
-$cleantalk_antispam->setEventTokenEnabled(1);
-```
-
-Do not set this flag for forms that do not use Bot Detector.
+Required when `getFrontendHTMLCode()` is printed on the page. It tells the cloud that Bot Detector is installed. Do not call it for forms without Bot Detector.
 
 ### `setEventToken($event_token)`
 
-The library normally reads the generated token from `$_POST['ct_bot_detector_event_token']`. If the form data is received another way, such as a decoded JSON request, pass the token explicitly:
+The library normally reads the token from `$_POST['ct_bot_detector_event_token']`. If the form data arrives another way (for example, as JSON), pass the token explicitly:
 
 ```php
 $cleantalk_antispam
@@ -121,55 +84,92 @@ $cleantalk_antispam
 
 ### `setDoBlockNoJSVisitor()`
 
-By default, the library does not locally block a visitor only because a valid event token is missing. Call this method if your application deliberately requires JavaScript and should reject requests without a valid token.
+By default, a missing token alone does not block the request. With this method, `handle()` immediately returns a blocking verdict when the token is missing or invalid, without sending a request to the cloud.
 
-```php
-$cleantalk_antispam->setDoBlockNoJSVisitor();
-```
+## Offline protection
 
-With this option enabled, `handle()` returns a blocked verdict without sending an API request when the event token is absent or invalid.
+If the CleanTalk cloud is unavailable, the library makes the decision itself based on a JavaScript check. Offline protection is enabled when both `CLEANTALK_SALT` and `CLEANTALK_ACCOUNT_EMAIL` are defined and not empty. Without them, the library works as in previous versions: requests are allowed while the cloud is unavailable, and `verdict->error` contains the reason.
+
+**When it is used.** The cloud did not respond within `CLEANTALK_MODERATE_TIMEOUT` seconds, a connection error occurred, the response code was not HTTP 200, or the response was not valid JSON.
+
+**How the decision is made.** If the `ct_js_check` cookie matches the expected hash, the request is allowed. If the cookie is missing or does not match, the request is blocked. In both cases the verdict has `offline = true`.
+
+> **Upgrading.** Existing integrations keep working unchanged. Before defining the constants, print `getFrontendHTMLCode($api_key)` on the form page and make sure `ct-js-check.js` is reachable: otherwise every visitor will be blocked while the cloud is unavailable.
+
+### Constants
+
+Define them with `define()` before using the library, in code that runs both when the form page is rendered and in the form handler: the hash must match in both places.
+
+| Constant | Required | Description | Default |
+|---|---|---|---|
+| `CLEANTALK_ACCOUNT_EMAIL` | yes | CleanTalk account email, used in the hash. Together with `CLEANTALK_SALT` enables offline protection. | `''` |
+| `CLEANTALK_SALT` | yes | Secret string of at least 32 characters. Together with `CLEANTALK_ACCOUNT_EMAIL` enables offline protection. | `''` |
+| `CLEANTALK_JS_URL` | if the library is outside the web root | Public URL of the directory containing `ct-js-check.js`. | auto-detected |
+| `CLEANTALK_MODERATE_TIMEOUT` | no | Seconds to wait for the cloud. Applied only when offline protection is enabled. | `2` |
+| `CLEANTALK_OFFLINE_MODE` | no | `true` — never contact the cloud, always decide by the JavaScript check (works even without the constants above). For testing and emergencies only. | `false` |
+
+### Making `ct-js-check.js` reachable
+
+If the library directory is inside the web root, the URL is detected automatically. If it is outside (for example, `vendor/` is above the public directory), choose one option:
+
+- **serve the file with your own handler (recommended):**
+
+  ```php
+  // handler at /cleantalk/ct-js-check.js
+  header('Content-Type: application/javascript');
+  readfile('/path/to/php-antispam/js/ct-js-check.js');
+  ```
+
+  and set `define('CLEANTALK_JS_URL', '/cleantalk');`;
+
+- **copy** `js/ct-js-check.js` into a public directory and set its URL in `CLEANTALK_JS_URL`. Copy the file again after every library update.
+
+The library appends the file name and version to the URL itself: `/cleantalk/ct-js-check.js?version=4.4`.
+
+### Testing
+
+1. Temporarily enable `define('CLEANTALK_OFFLINE_MODE', true);`.
+2. Submit the form with JavaScript enabled — the request must pass.
+3. Disable JavaScript, delete the `ct_js_check` cookie, reload the page, and submit the form — the request must be blocked.
+4. Remove `CLEANTALK_OFFLINE_MODE`.
+
+## Verdict
+
+| Field | Description |
+|---|---|
+| `allow` | `1` — allow, `0` — block. |
+| `comment` | Reason for the decision. |
+| `offline` | `true` if the decision was made locally, without the cloud. |
+| `request_link` | Link to the request in the CleanTalk dashboard (online mode only). |
+| `error` | Error that prevented the check (for example, an empty access key), or the cloud error when offline protection is not enabled. |
 
 ## Automatically populated request data
 
-The library also prepares these values automatically:
-
 | API parameter | Source |
 |---|---|
-| `sender_ip` | Detected from the current HTTP request unless overridden with `setIP()` |
-| `event_token` | Read from `$_POST['ct_bot_detector_event_token']` unless set with `setEventToken()` |
-| `js_on` | Set to `1` when an event token is available, otherwise `0` |
+| `sender_ip` | IP of the current HTTP request, unless set with `setIP()` |
+| `event_token` | `$_POST['ct_bot_detector_event_token']`, unless set with `setEventToken()` |
+| `js_on` | `1` when an event token is available, otherwise `0` |
 | `agent` | Identifies the php-antispam library |
-| `all_headers` | Built from the current HTTP headers after sensitive headers are removed |
-| `sender_info` | Includes the current referrer when available |
-| `submit_time` | Not sent by the current library; CleanTalk does not require it when Bot Detector and `event_token_enabled` are used |
-
-## Frontend HTML helper
-
-`CleantalkAntispam::getFrontendHTMLCode()` returns the Bot Detector script tag (currently without a `defer` attribute). Pass `true` to also include a warning for visitors who have disabled JavaScript.
-
-```php
-echo CleantalkAntispam::getFrontendHTMLCode(true);
-```
+| `all_headers` | HTTP headers of the current request with sensitive headers removed |
+| `sender_info` | Referrer, when available |
+| `submit_time` | Not sent; not required when Bot Detector and `event_token_enabled` are used |
 
 ## Custom form data containers
 
-### `setCustomFormDataContainer($data_container)`
-
-The current implementation only replaces the internal form data container. It does not map custom keys to email, nickname, or message, and it does not refresh the email or event token that were collected during construction. Do not use this method for field mapping; pass the required values explicitly with `setEmail()`, `setNickName()`, `setMessage()`, and `setEventToken()`.
+`setCustomFormDataContainer($data_container)` only replaces the internal form data container. It does not map keys to email, name, or message, and does not refresh the email or token already collected in the constructor. To pass data, use `setEmail()`, `setNickName()`, `setMessage()`, and `setEventToken()`.
 
 ## Troubleshooting
 
-Call `whatsWrong()` after `handle()` to inspect improvement suggestions, the prepared request data, and the verdict:
+Call `whatsWrong()` after `handle()` to see configuration suggestions, the prepared request data, and the verdict:
 
 ```php
 $api_result = $cleantalk_antispam->handle();
 error_log($cleantalk_antispam->whatsWrong(true));
 ```
 
-After `handle()` has prepared a request, `getCleanTalkRequestData()` returns its decoded data for custom diagnostics:
+Offline protection suggestions appear when the protection is not enabled, when `ct-js-check.js` is not reachable from the browser, when the decision was made without the cloud, or when the `ct_js_check` cookie did not arrive.
 
-```php
-$request_data = $cleantalk_antispam->getCleanTalkRequestData();
-```
+`getCleanTalkRequestData()` returns the decoded prepared request data for custom diagnostics.
 
-The diagnostic output can contain email addresses, messages, IP addresses, and other personal data. Store it only in appropriately protected logs and remove temporary diagnostic logging when troubleshooting is complete.
+> The diagnostic output contains email addresses, messages, IP addresses, and other personal data. Store it only in protected logs and remove temporary logging after troubleshooting.
