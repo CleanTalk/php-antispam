@@ -141,7 +141,7 @@ class CleantalkAntispam
      * @param bool $warn_if_js_disabled Flag to include a warning if JavaScript is disabled
      * @return string HTML code
      */
-    public static function getFrontendHTMLCode($access_key = '', $warn_if_js_disabled = false)
+    public static function getFrontendHTMLCode($access_key = '', $warn_if_js_disabled = false, $options = array())
     {
         // BC: the first parameter used to be $warn_if_js_disabled
         if (is_bool($access_key)) {
@@ -149,19 +149,48 @@ class CleantalkAntispam
             $access_key = '';
         }
 
+        // Optional CSP nonce: getFrontendHTMLCode($key, false, array('nonce' => $nonce))
+        $nonce_attr = '';
+        if (is_array($options) && !empty($options['nonce']) && is_string($options['nonce'])) {
+            $nonce_attr = sprintf(' nonce="%s"', htmlspecialchars($options['nonce'], ENT_QUOTES));
+        }
+
         $html = sprintf(
-            '<script src="%s"></script>',
+            '<script%s src="%s"></script>',
+            $nonce_attr,
             htmlspecialchars(static::BOT_DETECTOR_LIBRARY_URL . '?version=' . self::VERSION, ENT_QUOTES)
         );
 
+        $key_attr = htmlspecialchars(static::getJsCheckHash($access_key), ENT_QUOTES);
         $js_check_url = static::getJsCheckScriptUrl();
 
-        if (!empty($access_key) && is_string($access_key) && $js_check_url !== null) {
+        if (defined('CLEANTALK_JS_URL') && $js_check_url !== null) {
+            // Explicit opt-in: external, cacheable file
             $html .= sprintf(
-                '<script src="%s" data-ct-js-key="%s"></script>',
+                '<script%s src="%s" data-ct-js-key="%s"></script>',
+                $nonce_attr,
                 htmlspecialchars($js_check_url, ENT_QUOTES),
-                htmlspecialchars(static::getJsCheckHash($access_key), ENT_QUOTES)
+                $key_attr
             );
+        } else {
+            // Default: inline, nothing to copy or route
+            $inline = static::getJsCheckInlineCode();
+            if ($inline !== null) {
+                $html .= sprintf(
+                    '<script%s data-ct-js-key="%s">%s</script>',
+                    $nonce_attr,
+                    $key_attr,
+                    $inline
+                );
+            } elseif ($js_check_url !== null) {
+                // Fallback if the file could not be read
+                $html .= sprintf(
+                    '<script%s src="%s" data-ct-js-key="%s"></script>',
+                    $nonce_attr,
+                    htmlspecialchars($js_check_url, ENT_QUOTES),
+                    $key_attr
+                );
+            }
         }
 
         if ($warn_if_js_disabled) {
@@ -169,6 +198,32 @@ class CleantalkAntispam
         }
 
         return $html;
+    }
+
+    /**
+     * Contents of js/ct-js-check.js, safe to embed into an inline <script>.
+     * Returns null if the file cannot be read.
+     *
+     * @return string|null
+     */
+    protected static function getJsCheckInlineCode()
+    {
+        static $code = false;
+
+        if ($code === false) {
+            $code = null;
+            $path = dirname(__DIR__) . '/js/ct-js-check.js'; // adjust if the class is not in src/
+            if (is_readable($path)) {
+                $content = file_get_contents($path);
+                if (is_string($content) && $content !== '') {
+                    // Strip BOM and make sure the file cannot close the tag early
+                    $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+                    $code = str_ireplace('</script', '<\/script', trim($content));
+                }
+            }
+        }
+
+        return $code;
     }
 
     /**

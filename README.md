@@ -64,24 +64,7 @@ Print the library scripts before the form or in `<head>`. Use the same access ke
 </form>
 ```
 
-## 4. Making the JS file reachable
-
-The browser must load `js/ct-js-check.js` from the library directory. If the directory is inside the web root, nothing needs to be done. If it is outside, choose one option.
-
-**Option A (recommended): serve the file with your own handler** at `/cleantalk/ct-js-check.js`. This way the file always matches the installed library version.
-
-```php
-header('Content-Type: application/javascript');
-readfile('/path/to/php-antispam/js/ct-js-check.js');
-```
-
-```php
-define('CLEANTALK_JS_URL', '/cleantalk');
-```
-
-**Option B: copy the file** into a public directory, for example `/assets/cleantalk/`, and set `define('CLEANTALK_JS_URL', '/assets/cleantalk');`. Copy the file again after every library update.
-
-## 5. Form handler
+## 4. Form handler
 
 Check the data **before** saving it or sending an email:
 
@@ -103,13 +86,12 @@ if (!$result->allow) {
 
 `$result->offline` is `true` when the decision was made without the cloud.
 
-## 6. Testing
+## 5. Testing
 
-1. Open the form page. In DevTools, make sure `ct-js-check.js` loads with status 200 and the `ct_js_check` cookie is set.
-2. Temporarily add `define('CLEANTALK_OFFLINE_MODE', true);`.
+1. Temporarily add `define('CLEANTALK_OFFLINE_MODE', true);`.
    - With JavaScript enabled, the form must be **submitted**.
    - With JavaScript disabled and the cookie deleted, the form must be **blocked**.
-3. Remove `CLEANTALK_OFFLINE_MODE`.
+2. Remove `CLEANTALK_OFFLINE_MODE`.
 
 ## Examples
 
