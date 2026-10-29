@@ -39,7 +39,7 @@ if (! function_exists('apache_request_headers')) {
 if (! function_exists('locale_get_display_region')) {
     function locale_get_display_region($locale, $_in_locale = 'EN')
     {
-        return 'Unkonwn' . ($locale ? ': ' . $locale : '');
+        return 'Unknown' . ($locale ? ': ' . $locale : '');
     }
 }
 
