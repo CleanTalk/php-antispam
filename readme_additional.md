@@ -94,6 +94,19 @@ If the CleanTalk cloud is unavailable, the library makes the decision itself bas
 
 **How the decision is made.** If the `ct_js_check` cookie matches the expected hash, the request is allowed. If the cookie is missing or does not match, the request is blocked. In both cases the verdict has `offline = true`.
 
+### Checking with the cloud in forced offline mode
+
+`CLEANTALK_OFFLINE_MODE` normally means the library never contacts the cloud. To optionally confirm a positive JavaScript check with the cloud, enable the check on the `CleantalkAntispam` instance:
+
+```php
+$cleantalk_antispam = (new CleantalkAntispam($api_key))
+    ->setMessage($message)
+    ->setForcedOfflineCloudCheckEnabled();
+$api_result = $cleantalk_antispam->handle();
+```
+
+This setting has an effect only when `CLEANTALK_OFFLINE_MODE` is enabled and the JavaScript check passes. The cloud request's `sender_info` includes `ct_offline_mode: 1` and `ct_offline_allow: 1`, identifying it as a request that passed the local forced-offline check. A successful cloud response becomes the final verdict, so a cloud rejection blocks the request. If the cloud is unavailable, the request keeps its positive offline verdict. The cloud request uses `CLEANTALK_MODERATE_TIMEOUT` (2 seconds by default). Without this method call, forced offline mode continues to make only the local JavaScript check.
+
 > **Upgrading.** Existing integrations keep working unchanged. Before defining the constants, print `getFrontendHTMLCode($api_key)` on the form page and make sure `ct-js-check.js` is reachable: otherwise every visitor will be blocked while the cloud is unavailable.
 
 ### Constants
@@ -105,8 +118,8 @@ Define them with `define()` before using the library, in code that runs both whe
 | `CLEANTALK_ACCOUNT_EMAIL` | yes | CleanTalk account email, used in the hash. Together with `CLEANTALK_SALT` enables offline protection. | `''` |
 | `CLEANTALK_SALT` | yes | Secret string of at least 32 characters. Together with `CLEANTALK_ACCOUNT_EMAIL` enables offline protection. | `''` |
 | `CLEANTALK_JS_URL` | if the library is outside the web root | Public URL of the directory containing `ct-js-check.js`. | auto-detected |
-| `CLEANTALK_MODERATE_TIMEOUT` | no | Seconds to wait for the cloud. Applied only when offline protection is enabled. | `2` |
-| `CLEANTALK_OFFLINE_MODE` | no | `true` — never contact the cloud, always decide by the JavaScript check (works even without the constants above). For testing and emergencies only. | `false` |
+| `CLEANTALK_MODERATE_TIMEOUT` | no | Seconds to wait for the cloud. Applied to offline-protection requests and the optional cloud check in forced offline mode. | `2` |
+| `CLEANTALK_OFFLINE_MODE` | no | `true` — decide by the JavaScript check without contacting the cloud, unless the optional `setForcedOfflineCloudCheckEnabled()` check is enabled. Works even without the constants above. For testing and emergencies only. | `false` |
 
 ### Making `ct-js-check.js` reachable
 

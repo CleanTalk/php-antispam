@@ -36,6 +36,10 @@ class CleantalkAntispam
      */
     private $block_no_js_visitor = false;
     /**
+     * @var bool Whether to confirm positive forced-offline verdicts with the cloud
+     */
+    private $forced_offline_cloud_check_enabled = false;
+    /**
      * @var string|null Why the verdict has been made locally
      */
     private $offline_reason = null;
@@ -363,15 +367,15 @@ class CleantalkAntispam
      *
      * @return CleantalkResponse Response object from the CleanTalk API
      */
-    private function getCleanTalkResponse()
+    private function getCleanTalkResponse($use_offline_timeout = false, $offline_allow_confirmation = false)
     {
         $http = new Request();
-        $this->cleantalk_request_data = $this->prepareCleanTalkRequestData();
+        $this->cleantalk_request_data = $this->prepareCleanTalkRequestData($offline_allow_confirmation);
         $http->setUrl(static::MODERATE_URL)
              ->setData($this->cleantalk_request_data);
 
         // Without the offline fallback a short timeout would only turn slow answers into errors
-        if ($this->isOfflineProtectionConfigured()) {
+        if ($this->isOfflineProtectionConfigured() || $use_offline_timeout) {
             $timeout = $this->getModerateTimeout();
             $http->setOptions(array(
                 CURLOPT_TIMEOUT => $timeout,
@@ -472,8 +476,16 @@ class CleantalkAntispam
      *
      * @return string JSON encoded request data
      */
-    private function prepareCleanTalkRequestData()
+    private function prepareCleanTalkRequestData($offline_allow_confirmation = false)
     {
+        $sender_info = array(
+            'REFFERRER' => !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
+        );
+        if ($offline_allow_confirmation) {
+            $sender_info['ct_offline_mode'] = 1;
+            $sender_info['ct_offline_allow'] = 1;
+        }
+
         $data = array(
             'method_name' => $this->method_name,
             'auth_key' => $this->access_key,
@@ -485,11 +497,7 @@ class CleantalkAntispam
             'event_token' => $this->event_token,
             'agent' => 'php-cleantalk-check-' . static::VERSION,
             'all_headers' => $this->getAllHeaders(),
-            'sender_info' => @json_encode(
-                array(
-                    'REFFERRER' => !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
-                )
-            ),
+            'sender_info' => @json_encode($sender_info),
         );
         if ( isset($this->event_token_enabled) ) {
             $data['event_token_enabled'] = $this->event_token_enabled;
@@ -658,6 +666,19 @@ class CleantalkAntispam
     }
 
     /**
+     * Enable a cloud check after a positive verdict in forced offline mode.
+     *
+     * @param bool $enabled
+     * @return $this
+     */
+    public function setForcedOfflineCloudCheckEnabled($enabled = true)
+    {
+        $this->fluidCallStack(__FUNCTION__);
+        $this->forced_offline_cloud_check_enabled = (bool)$enabled;
+        return $this;
+    }
+
+    /**
      * Set the event token.
      *
      * @param string|null $event_token Event token
@@ -738,7 +759,19 @@ class CleantalkAntispam
 
         if ($this->isForcedOfflineMode()) {
             $this->cleantalk_request_data = $this->prepareCleanTalkRequestData();
-            $this->applyOfflineVerdict('The CLEANTALK_OFFLINE_MODE constant is enabled, the moderate server has not been requested.');
+            $this->applyOfflineVerdict('The CLEANTALK_OFFLINE_MODE constant is enabled; the initial verdict was made locally.');
+
+            if ($this->verdict->allow && $this->forced_offline_cloud_check_enabled) {
+                $this->cleantalk_response = $this->getCleanTalkResponse(true, true);
+
+                if ($this->cleantalk_response->error) {
+                    $this->offline_reason = 'The moderate server could not confirm the offline verdict: '
+                        . $this->cleantalk_response->error;
+                } else {
+                    $this->applyCloudVerdict();
+                }
+            }
+
             return $this->beforeReturnVerdict();
         }
 
@@ -756,14 +789,24 @@ class CleantalkAntispam
             return $this->beforeReturnVerdict();
         }
 
+        $this->applyCloudVerdict();
+
+        return $this->beforeReturnVerdict();
+    }
+
+    /**
+     * Apply the cloud response as the final verdict.
+     */
+    private function applyCloudVerdict()
+    {
         $this->verdict->allow = $this->cleantalk_response->allow;
         $this->verdict->comment = $this->cleantalk_response->comment;
         $this->verdict->request_link = !empty($this->cleantalk_response->id)
             ? 'https://cleantalk.org/my/show_requests?request_id=' . $this->cleantalk_response->id
             : null
         ;
-
-        return $this->beforeReturnVerdict();
+        $this->verdict->offline = false;
+        $this->offline_reason = null;
     }
 
     /**

@@ -46,8 +46,8 @@ Define them in a shared settings file that is loaded **both on the form page and
 define('CLEANTALK_ACCOUNT_EMAIL', 'you@example.com');                  // required: CleanTalk account email
 define('CLEANTALK_SALT', 'f3c9a1e07b2d4c8e9a6b5d0f1e2c3a4b');          // required: secret string, at least 32 characters
 // define('CLEANTALK_JS_URL', '/cleantalk');                           // if the library is outside the web root (see step 4)
-// define('CLEANTALK_MODERATE_TIMEOUT', 2);                            // cloud timeout, seconds (default 2 sec, applied only with offline protection)
-// define('CLEANTALK_OFFLINE_MODE', true);                             // testing only: never contact the cloud
+// define('CLEANTALK_MODERATE_TIMEOUT', 2);                            // cloud timeout, seconds (default 2 sec)
+// define('CLEANTALK_OFFLINE_MODE', true);                             // use the local JS check; optional cloud confirmation is documented below
 ```
 
 ## 3. Form page
