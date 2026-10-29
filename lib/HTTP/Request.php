@@ -168,7 +168,7 @@ class Request
     /**
      * Function sends raw http request
      *
-     * @return array|bool (array || array('error' => true))
+     * @return string|array|bool Response body, an array of bodies for multiple URLs, or array('error' => ...) on failure
      */
     public function request()
     {

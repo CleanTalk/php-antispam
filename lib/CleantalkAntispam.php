@@ -707,12 +707,9 @@ class CleantalkAntispam
             return @json_encode($array);
         }
 
-            /** @psalm-suppress InvalidScalarArgument */
-            $suggestions = var_export($array['suggestions'], 1);
-            /** @psalm-suppress InvalidScalarArgument */
-            $data  = var_export($array['request_data'], 1);
-            /** @psalm-suppress InvalidScalarArgument */
-            $verdict = var_export($array['verdict'], 1);
+            $suggestions = var_export($array['suggestions'], true);
+            $data  = var_export($array['request_data'], true);
+            $verdict = var_export($array['verdict'], true);
         echo "<div>Suggestions<pre>$suggestions</pre></div>";
         echo "<div>Request Data<pre>$data</pre></div>";
         echo "<div>Verdict<pre>$verdict</pre></div>";
