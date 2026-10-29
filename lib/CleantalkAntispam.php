@@ -163,7 +163,14 @@ class CleantalkAntispam
             return new CleantalkResponse(null, null, $error);
         }
 
-        return new CleantalkResponse(@json_decode($response_raw), null);
+        if (is_array($response_raw)) {
+            $response = new CleantalkResponse();
+            $response->error = $response_raw['error'] ?? 'Unexpected HTTP client response';
+
+            return $response;
+        }
+
+        return new CleantalkResponse(json_decode($response_raw), null);
     }
 
     /**
