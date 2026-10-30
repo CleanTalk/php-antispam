@@ -64,7 +64,7 @@ The method outputs:
 
 To show a warning to visitors without JavaScript, pass `true` as the second argument: `getFrontendHTMLCode($api_key, true)`.
 
-> The legacy call `getFrontendHTMLCode(true)` without a key still works, but outputs only Bot Detector. Without the JavaScript check script, offline protection (if enabled) will block every visitor while the cloud is unavailable.
+Use the access-key form of `getFrontendHTMLCode()` for offline protection so the cookie matches the value expected by the form handler.
 
 ## Bot Detector and event token
 
@@ -88,15 +88,22 @@ By default, a missing token alone does not block the request. With this method, 
 
 ## Offline protection
 
-If the CleanTalk cloud is unavailable, the library makes the decision itself based on a JavaScript check. Offline protection is enabled when both `CLEANTALK_SALT` and `CLEANTALK_ACCOUNT_EMAIL` are defined and not empty. Without them, the library works as in previous versions: requests are allowed while the cloud is unavailable, and `verdict->error` contains the reason.
+See [Offline mode in the README](README.md#step-6-optional-offline-mode) for setup and limitations. The local check compares the `ct_js_check` cookie with the expected hash; it is basic protection, not a replacement for cloud spam analysis.
+To activate additional cloud check after offline protection passed, just call additional method `setForcedOfflineCloudCheckEnabled()`
 
-**When it is used.** The cloud did not respond within `CLEANTALK_MODERATE_TIMEOUT` seconds, a connection error occurred, the response code was not HTTP 200, or the response was not valid JSON.
-
-**How the decision is made.** If the `ct_js_check` cookie matches the expected hash, the request is allowed. If the cookie is missing or does not match, the request is blocked. In both cases the verdict has `offline = true`.
+```php
+$result = (new CleantalkAntispam($api_key))
+    ->useContactFormCheck()
+    ->setEmail($email)
+    ->setNickName($name)
+    ->setMessage($message)
+    ->setForcedOfflineCloudCheckEnabled() // <- this is the necessary method call
+    ->handle();
+```
 
 ### Checking with the cloud in forced offline mode
 
-`CLEANTALK_OFFLINE_MODE` normally means the library never contacts the cloud. To optionally confirm a positive JavaScript check with the cloud, enable the check on the `CleantalkAntispam` instance:
+With offline mode enabled as described in the README, the library normally makes only the local JavaScript check. To additionally check locally allowed submissions with the cloud, enable the check on the `CleantalkAntispam` instance:
 
 ```php
 $cleantalk_antispam = (new CleantalkAntispam($api_key))
@@ -105,46 +112,18 @@ $cleantalk_antispam = (new CleantalkAntispam($api_key))
 $api_result = $cleantalk_antispam->handle();
 ```
 
-This setting has an effect only when `CLEANTALK_OFFLINE_MODE` is enabled and the JavaScript check passes. The cloud request's `sender_info` includes `ct_offline_mode: 1` and `ct_offline_allow: 1`, identifying it as a request that passed the local forced-offline check. A successful cloud response becomes the final verdict, so a cloud rejection blocks the request. If the cloud is unavailable, the request keeps its positive offline verdict. The cloud request uses `CLEANTALK_MODERATE_TIMEOUT` (2 seconds by default). Without this method call, forced offline mode continues to make only the local JavaScript check.
+This setting has an effect only in forced offline mode and only when the JavaScript check passes. Locally blocked submissions are not sent to the cloud. The cloud request's `sender_info` includes `ct_offline_mode: 1` and `ct_offline_allow: 1`, identifying it as a request that passed the local check.
 
-> **Upgrading.** Existing integrations keep working unchanged. Before defining the constants, print `getFrontendHTMLCode($api_key)` on the form page and make sure `ct-js-check.js` is reachable: otherwise every visitor will be blocked while the cloud is unavailable.
+A successful cloud response becomes the final verdict, so a cloud rejection blocks the request. In this case, `offline` is `false`, and `request_link` is populated when the cloud returns a request ID. If the cloud is unavailable, the request keeps its positive offline verdict with `offline = true`. The default timeout for this cloud check is 2 seconds.
 
-### Constants
-
-Define them with `define()` before using the library, in code that runs both when the form page is rendered and in the form handler: the hash must match in both places.
-
-| Constant | Required | Description | Default |
-|---|---|---|---|
-| `CLEANTALK_ACCOUNT_EMAIL` | yes | CleanTalk account email, used in the hash. Together with `CLEANTALK_SALT` enables offline protection. | `''` |
-| `CLEANTALK_SALT` | yes | Secret string of at least 32 characters. Together with `CLEANTALK_ACCOUNT_EMAIL` enables offline protection. | `''` |
-| `CLEANTALK_JS_URL` | if the library is outside the web root | Public URL of the directory containing `ct-js-check.js`. | auto-detected |
-| `CLEANTALK_MODERATE_TIMEOUT` | no | Seconds to wait for the cloud. Applied to offline-protection requests and the optional cloud check in forced offline mode. | `2` |
-| `CLEANTALK_OFFLINE_MODE` | no | `true` — decide by the JavaScript check without contacting the cloud, unless the optional `setForcedOfflineCloudCheckEnabled()` check is enabled. Works even without the constants above. For testing and emergencies only. | `false` |
-
-### Making `ct-js-check.js` reachable
-
-If the library directory is inside the web root, the URL is detected automatically. If it is outside (for example, `vendor/` is above the public directory), choose one option:
-
-- **serve the file with your own handler (recommended):**
-
-  ```php
-  // handler at /cleantalk/ct-js-check.js
-  header('Content-Type: application/javascript');
-  readfile('/path/to/php-antispam/js/ct-js-check.js');
-  ```
-
-  and set `define('CLEANTALK_JS_URL', '/cleantalk');`;
-
-- **copy** `js/ct-js-check.js` into a public directory and set its URL in `CLEANTALK_JS_URL`. Copy the file again after every library update.
-
-The library appends the file name and version to the URL itself: `/cleantalk/ct-js-check.js?version=4.4`.
+Without this method call, forced offline mode continues to make only the local JavaScript check. Pass `false` to `setForcedOfflineCloudCheckEnabled(false)` to disable the additional check.
 
 ### Testing
 
-1. Temporarily enable `define('CLEANTALK_OFFLINE_MODE', true);`.
+1. Enable offline mode as described in the README, without the additional cloud check.
 2. Submit the form with JavaScript enabled — the request must pass.
 3. Disable JavaScript, delete the `ct_js_check` cookie, reload the page, and submit the form — the request must be blocked.
-4. Remove `CLEANTALK_OFFLINE_MODE`.
+4. Restore the desired mode after testing.
 
 ## Verdict
 
@@ -165,7 +144,7 @@ The library appends the file name and version to the URL itself: `/cleantalk/ct-
 | `js_on` | `1` when an event token is available, otherwise `0` |
 | `agent` | Identifies the php-antispam library |
 | `all_headers` | HTTP headers of the current request with sensitive headers removed |
-| `sender_info` | Referrer, when available |
+| `sender_info` | Referrer, when available; `ct_offline_mode: 1` and `ct_offline_allow: 1` for the additional cloud check after a local allow |
 | `submit_time` | Not sent; not required when Bot Detector and `event_token_enabled` are used |
 
 ## Custom form data containers

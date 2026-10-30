@@ -1,97 +1,142 @@
 # CleanTalk php-antispam: Lightweight Spam Protection for PHP Apps
 ============
+
 ![example workflow](https://github.com/CleanTalk/php-antispam/actions/workflows/tests.yml/badge.svg)
 
 [![Latest Stable Version](https://poser.pugx.org/cleantalk/php-antispam/v)](https://packagist.org/packages/cleantalk/php-antispam)
 
-## The Invisible protection from spam, no captcha, no recaptcha, no puzzles, no math captcha.
-_API for antispam service cleantalk.org_
+## Invisible spam protection: no CAPTCHA, puzzles, or math tests
+
+_A PHP client for the CleanTalk anti-spam API. Spam protection and a CAPTCHA-free alternative to reCAPTCHA, powered by background scoring that doesn’t interrupt website visitors._
+
+If you find this project useful, please consider starring it on GitHub ⭐. It helps us improve and maintain the project.
 
 #### Requirements
-* PHP 5.6 and above 
-* CURL support 
 
-### How we stop spam?
-PHP Anti-Spam library providing invisible spam protection for your websites, registration forms, and comment sections. CleanTalk API offers an effective CAPTCHA alternative that silently blocks spam without interrupting your users' experience.
+* PHP 5.6 or later
+* cURL support
 
-When users submit forms on your website form, the form data is securely sent to CleanTalk’s cloud servers. CleanTalk analyzes submissions using advanced heuristics. CleanTalk then returns a real-time verdict— legitimate requests or spam.
+### How does it stop spam?
 
-You are free to do anything with spam, or just allow as to block spam (we will interrupt desirable request).
+This PHP library provides invisible spam protection for websites, registration forms, and comment sections. The CleanTalk API is a CAPTCHA alternative that detects spam without interrupting your users.
+
+When a user submits a form, the library securely sends the form data to CleanTalk's cloud servers for analysis. CleanTalk then returns a real-time verdict identifying the submission as legitimate or spam. Your application decides how to handle that verdict.
 
 ## CleanTalk vs CAPTCHA
-| Feature             | CleanTalk Anti-Spam               | Traditional CAPTCHA                  |
-|---------------------|-----------------------------------|--------------------------------------|
-| User Interaction    | 100% invisible to users           | Requires solving puzzles or clicks   |
-| Form Compatibility  | Works with any PHP form           | Often requires additional scripts    |
-| Speed               | Instant cloud check               | Slower due to user interaction       |
-| Accessibility       | Fully accessible, no visual tests | Often inaccessible to screen readers |
+| Feature             | CleanTalk Anti-Spam               | Traditional CAPTCHA                      |
+|---------------------|-----------------------------------|------------------------------------------|
+| User Interaction    | 100% invisible to users           | Requires solving puzzles or clicks       |
+| Form Compatibility  | Works with any PHP form           | Often requires additional scripts        |
+| Speed               | Instant cloud check               | Slower due to user interaction           |
+| Accessibility       | No visual tests                   | Can be difficult for screen-reader users |
 
->  CleanTalk is a **PHP spam filter** and a **captcha-free alternative** that boosts UX and protects your forms with zero friction.
+> CleanTalk is a **PHP spam filter** and **CAPTCHA-free alternative** that protects your forms without adding friction for users.
 
-## Interesting? Let's make some settings (it will take few minutes)
+## Getting started
 
-## 1. Installation
+Setup takes only a few minutes.
+
+### Step 1: install the SDK
+
+Install the SDK with Composer:
 
 ```bash
 composer require cleantalk/php-antispam
 ```
 
-Without Composer: extract the library archive and include `require_once '/path/to/php-antispam/cleantalk-antispam.php';`.
+Alternatively, download the ZIP archive and extract it into your project directory.
 
-## 2. Constants
+### Step 2: configure your API key
 
-Define them in a shared settings file that is loaded **both on the form page and in the form handler**: the JavaScript check hash must match in both places. Defining `CLEANTALK_ACCOUNT_EMAIL` and `CLEANTALK_SALT` enables offline protection: when the cloud is unavailable, visitors without the JavaScript check cookie are blocked. Without these constants, requests are allowed while the cloud is unavailable, as in previous versions.
+First, copy your API key from your [CleanTalk dashboard](https://cleantalk.org/my/).
 
-```php
-define('CLEANTALK_ACCOUNT_EMAIL', 'you@example.com');                  // required: CleanTalk account email
-define('CLEANTALK_SALT', 'f3c9a1e07b2d4c8e9a6b5d0f1e2c3a4b');          // required: secret string, at least 32 characters
-// define('CLEANTALK_JS_URL', '/cleantalk');                           // if the library is outside the web root (see step 4)
-// define('CLEANTALK_MODERATE_TIMEOUT', 2);                            // cloud timeout, seconds (default 2 sec)
-// define('CLEANTALK_OFFLINE_MODE', true);                             // use the local JS check; optional cloud confirmation is documented below
+Make it available to PHP as an environment variable:
+
+| Name | Value |
+|---|---|
+| `CLEANTALK_API_KEY` | Your CleanTalk API key |
+
+On managed hosting, add it in the **Environment variables** or **Secrets** section of your hosting control panel, then restart the application if required.
+
+If your application already loads a `.env` file, add:
+
+```dotenv
+CLEANTALK_API_KEY=your-api-key
 ```
 
-## 3. Form page
+PHP does not load `.env` files by itself; this option works only when your application or framework includes a dotenv loader. Do not put the API key in your PHP files or commit it to source control.
 
-Print the library scripts before the form or in `<head>`. Use the same access key as in the form handler.
+### Step 3: add the CleanTalk handler to your form handler
 
-```php
-<?php echo \CleanTalk\CleantalkAntispam::getFrontendHTMLCode($apikey); ?>
-<form method="post" action="/contact-handler.php">
-    <input name="name">
-    <input name="email" type="email">
-    <textarea name="message"></textarea>
-    <button type="submit">Send</button>
-</form>
+Add the handler to your PHP code:
+
+```php linenums="1"
+$api_key = getenv('CLEANTALK_API_KEY');
+if (empty($api_key)) {
+    throw new RuntimeException('CLEANTALK_API_KEY is not configured');
+}
+
+$email = $_POST['email']; // Get this value from your form.
+$cleantalk_antispam = (new CleantalkAntispam($api_key))
+    ->setEmail($email);
+// Set additional parameters here.
+$api_result = $cleantalk_antispam->handle();
 ```
 
-## 4. Form handler
+See [additional configuration options](readme_additional.md) to select the form type and provide the sender name, message, IP address, and Bot Detector settings.
 
-Check the data **before** saving it or sending an email:
+### Step 4: add the JavaScript library to your HTML template
+
+The library collects frontend data used for bot detection.
+
+```html
+<?php echo \CleanTalk\CleantalkAntispam::getFrontendHTMLCode($api_key); ?>
+```
+
+Enable the event token in your PHP handler:
 
 ```php
-use CleanTalk\CleantalkAntispam;
+...
+// Set additional parameters here.
+$cleantalk_antispam->setEventTokenEnabled(1);
+...
+```
 
-$cleantalk = new CleantalkAntispam($apikey, $_POST['email']);
-$result = $cleantalk
-    ->setEventTokenEnabled(1)          // required: Bot Detector is included via getFrontendHTMLCode()
-    ->setNickName($_POST['name'])      // user name, if available
-    ->setMessage($_POST['message'])    // message text, if available
-    ->useContactFormCheck()            // for registration forms: ->useRegistrationCheck()
-    ->handle();
+### Step 5: handle the API verdict
 
-if (!$result->allow) {
-    // Blocked: do not save the data, show $result->comment
+For example, stop processing when CleanTalk identifies a submission as spam:
+
+```php
+if ($api_result && $api_result->allow === 0) {
+    die('Blocked. Spam protection OK. Reason: ' . $api_result->comment);
+    // Or add your own actions, logs, or messages.
 }
 ```
 
-`$result->offline` is `true` when the decision was made without the cloud.
+### Step 6 (optional): offline mode
 
-## 5. Testing
+To enable the offline mode, set the `CLEANTALK_OFFLINE_MODE` constant to `true` in your PHP handler:
 
-1. Temporarily add `define('CLEANTALK_OFFLINE_MODE', true);`.
-   - With JavaScript enabled, the form must be **submitted**.
-   - With JavaScript disabled and the cookie deleted, the form must be **blocked**.
-2. Remove `CLEANTALK_OFFLINE_MODE`.
+```php
+define('CLEANTALK_OFFLINE_MODE', true);
+```
+
+### Step 6 (optional): troubleshoot the integration
+
+To identify possible configuration problems, log the improvement suggestions after calling `handle()`:
+
+```php
+// Troubleshooting: log improvement suggestions.
+error_log($cleantalk_antispam->whatsWrong(true));
+```
+
+The diagnostic output can contain personal data. Use this logging only while troubleshooting and store it in appropriately protected logs.
+
+See the [complete form-handler example](https://github.com/CleanTalk/php-antispam/blob/dev/examples/form_with_handler/form_with_handler.php) for context.
+
+### Step 7 (optional): get help
+
+If you have questions, open a GitHub issue or contact us through our ticket system.
 
 ## Examples
 
