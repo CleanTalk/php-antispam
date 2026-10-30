@@ -90,12 +90,12 @@ See [additional configuration options](readme_additional.md) to select the form 
 The library collects frontend data used for bot detection.
 
 ```html
-<script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
+<?php echo \CleanTalk\CleantalkAntispam::getFrontendHTMLCode($api_key); ?>
 ```
 
 Enable the event token in your PHP handler:
 
-```php linenums="3"
+```php
 ...
 // Set additional parameters here.
 $cleantalk_antispam->setEventTokenEnabled(1);
@@ -111,6 +111,14 @@ if ($api_result && $api_result->allow === 0) {
     die('Blocked. Spam protection OK. Reason: ' . $api_result->comment);
     // Or add your own actions, logs, or messages.
 }
+```
+
+### Step 6 (optional): offline mode
+
+To enable the offline mode, set the `CLEANTALK_OFFLINE_MODE` constant to `true` in your PHP handler:
+
+```php
+define('CLEANTALK_OFFLINE_MODE', true);
 ```
 
 ### Step 6 (optional): troubleshoot the integration

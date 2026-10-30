@@ -6,6 +6,7 @@ use CleanTalk\CleantalkVerdict;
 use CleanTalk\HTTP\CleantalkResponse;
 use CleanTalk\HTTP\Helper;
 use CleanTalk\HTTP\Request;
+use CleanTalk\HTTP\Response;
 
 class CleantalkAntispam
 {
@@ -14,6 +15,9 @@ class CleantalkAntispam
     const BOT_DETECTOR_LIBRARY_URL = 'https://fd.cleantalk.org/ct-bot-detector-wrapper.js';
     const EVENT_TOKEN_FIELD_NAME = 'ct_bot_detector_event_token';
     const EMAIL_ADDRESS_REGEXP = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
+    const JS_CHECK_COOKIE_NAME = 'ct_js_check';
+    const JS_CHECK_SCRIPT_NAME = 'ct-js-check.js';
+    const DEFAULT_MODERATE_TIMEOUT = 2;
 
     /**
      * @var string Access key for CleanTalk API
@@ -31,6 +35,14 @@ class CleantalkAntispam
      * @var bool
      */
     private $block_no_js_visitor = false;
+    /**
+     * @var bool Whether to confirm positive forced-offline verdicts with the cloud
+     */
+    private $forced_offline_cloud_check_enabled = false;
+    /**
+     * @var string|null Why the verdict has been made locally
+     */
+    private $offline_reason = null;
     /**
      * @var string Nickname of the sender
      */
@@ -127,17 +139,223 @@ class CleantalkAntispam
      */
 
     /**
-     * Get the frontend HTML code for the CleanTalk bot detector.
+     * Get the frontend HTML code for the CleanTalk bot detector and the offline JavaScript check.
      *
+     * @param string|bool $access_key Access key for CleanTalk API, required for the offline JavaScript check
      * @param bool $warn_if_js_disabled Flag to include a warning if JavaScript is disabled
      * @return string HTML code
      */
-    public static function getFrontendHTMLCode($warn_if_js_disabled = false)
+    public static function getFrontendHTMLCode($access_key = '', $warn_if_js_disabled = false, $options = array())
     {
-        $warn = $warn_if_js_disabled ? '<noscript><div>Please, enable JavaScript in the browser to process the form</div></noscript>' : '';
-        $url = static::BOT_DETECTOR_LIBRARY_URL . '?version=' . self::VERSION;
-        $html = '<script src="%s"></script>%s';
-        return sprintf($html, $url, $warn);
+        // BC: the first parameter used to be $warn_if_js_disabled
+        if (is_bool($access_key)) {
+            $warn_if_js_disabled = $access_key;
+            $access_key = '';
+        }
+
+        // Optional CSP nonce: getFrontendHTMLCode($key, false, array('nonce' => $nonce))
+        $nonce_attr = '';
+        if (is_array($options) && !empty($options['nonce']) && is_string($options['nonce'])) {
+            $nonce_attr = sprintf(' nonce="%s"', htmlspecialchars($options['nonce'], ENT_QUOTES));
+        }
+
+        $html = sprintf(
+            '<script%s src="%s"></script>',
+            $nonce_attr,
+            htmlspecialchars(static::BOT_DETECTOR_LIBRARY_URL . '?version=' . self::VERSION, ENT_QUOTES)
+        );
+
+        $key_attr = htmlspecialchars(static::getJsCheckHash($access_key), ENT_QUOTES);
+        $js_check_url = static::getJsCheckScriptUrl();
+
+        if (defined('CLEANTALK_JS_URL') && $js_check_url !== null) {
+            // Explicit opt-in: external, cacheable file
+            $html .= sprintf(
+                '<script%s src="%s" data-ct-js-key="%s"></script>',
+                $nonce_attr,
+                htmlspecialchars($js_check_url, ENT_QUOTES),
+                $key_attr
+            );
+        } else {
+            // Default: inline, nothing to copy or route
+            $inline = static::getJsCheckInlineCode();
+            if ($inline !== null) {
+                $html .= sprintf(
+                    '<script%s data-ct-js-key="%s">%s</script>',
+                    $nonce_attr,
+                    $key_attr,
+                    $inline
+                );
+            } elseif ($js_check_url !== null) {
+                // Fallback if the file could not be read
+                $html .= sprintf(
+                    '<script%s src="%s" data-ct-js-key="%s"></script>',
+                    $nonce_attr,
+                    htmlspecialchars($js_check_url, ENT_QUOTES),
+                    $key_attr
+                );
+            }
+        }
+
+        if ($warn_if_js_disabled) {
+            $html .= '<noscript><div>Please, enable JavaScript in the browser to process the form</div></noscript>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Contents of js/ct-js-check.js, safe to embed into an inline <script>.
+     * Returns null if the file cannot be read.
+     *
+     * @return string|null
+     */
+    protected static function getJsCheckInlineCode()
+    {
+        static $code = false;
+
+        if ($code === false) {
+            $code = null;
+            $path = dirname(__DIR__) . '/js/ct-js-check.js'; // adjust if the class is not in src/
+            if (is_readable($path)) {
+                $content = file_get_contents($path);
+                if (is_string($content) && $content !== '') {
+                    // Strip BOM and make sure the file cannot close the tag early
+                    $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+                    $code = str_ireplace('</script', '<\/script', trim($content));
+                }
+            }
+        }
+
+        return $code;
+    }
+
+    /**
+     * Build the hash proving that JavaScript is executed in the visitor browser.
+     *
+     * The value must be identical when the page is rendered and when the form is checked,
+     * so it is derived only from data available on both sides without any storage.
+     *
+     * @param string $access_key Access key for CleanTalk API
+     * @return string sha256 hex digest
+     */
+    private static function getJsCheckHash($access_key)
+    {
+        $email = defined('CLEANTALK_ACCOUNT_EMAIL') ? (string)CLEANTALK_ACCOUNT_EMAIL : '';
+        $salt = defined('CLEANTALK_SALT') ? (string)CLEANTALK_SALT : '';
+
+        return hash('sha256', (string)$access_key . $email . $salt);
+    }
+
+    /**
+     * Get the public URL of the JavaScript check file shipped with the library.
+     *
+     * @return string|null Null if the library directory is not reachable from the web
+     */
+    private static function getJsCheckScriptUrl()
+    {
+        if (defined('CLEANTALK_JS_URL')) {
+            return rtrim((string)CLEANTALK_JS_URL, '/')
+                . '/' . static::JS_CHECK_SCRIPT_NAME . '?version=' . self::VERSION;
+        }
+
+        $doc_root = !empty($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+        $js_dir = realpath(__DIR__ . '/../js');
+
+        if ($doc_root === false || $js_dir === false) {
+            return null;
+        }
+
+        $doc_root = rtrim(str_replace('\\', '/', $doc_root), '/');
+        $js_dir = str_replace('\\', '/', $js_dir);
+
+        if (strpos($js_dir, $doc_root . '/') !== 0) {
+            return null;
+        }
+
+        return substr($js_dir, strlen($doc_root))
+            . '/' . static::JS_CHECK_SCRIPT_NAME . '?version=' . self::VERSION;
+    }
+
+    /**
+     * ------------ Offline mode methods ------------
+     */
+
+    /**
+     * Check if the moderate server should not be requested at all.
+     *
+     * @return bool
+     */
+    private function isForcedOfflineMode()
+    {
+        return defined('CLEANTALK_OFFLINE_MODE') && CLEANTALK_OFFLINE_MODE;
+    }
+
+    /**
+     * Check if the offline protection is set up by the integration.
+     *
+     * The required constants act as the opt-in marker, so integrations made before the offline protection
+     * keep passing requests through when the moderate server is unreachable.
+     *
+     * @return bool
+     */
+    private function isOfflineProtectionConfigured()
+    {
+        return defined('CLEANTALK_SALT') && (string)constant('CLEANTALK_SALT') !== ''
+            && defined('CLEANTALK_ACCOUNT_EMAIL') && (string)constant('CLEANTALK_ACCOUNT_EMAIL') !== '';
+    }
+
+    /**
+     * Get the moderate server response timeout in seconds.
+     *
+     * @return int
+     */
+    private function getModerateTimeout()
+    {
+        if (defined('CLEANTALK_MODERATE_TIMEOUT') && (int)CLEANTALK_MODERATE_TIMEOUT > 0) {
+            return (int)CLEANTALK_MODERATE_TIMEOUT;
+        }
+
+        return static::DEFAULT_MODERATE_TIMEOUT;
+    }
+
+    /**
+     * Check if the visitor returned the hash issued by getFrontendHTMLCode().
+     *
+     * @return bool
+     */
+    private function isJsCheckPassed()
+    {
+        $received =
+            isset($_COOKIE[static::JS_CHECK_COOKIE_NAME]) ?
+            $_COOKIE[static::JS_CHECK_COOKIE_NAME] :
+            null;
+
+        if (!is_string($received) || $received === '') {
+            return false;
+        }
+
+        return hash_equals(static::getJsCheckHash($this->access_key), $received);
+    }
+
+    /**
+     * Make the verdict locally, without the moderate server.
+     *
+     * @param string $reason Why the local verdict is used
+     */
+    private function applyOfflineVerdict($reason)
+    {
+        $this->offline_reason = $reason;
+        $this->verdict->offline = true;
+
+        if ($this->isJsCheckPassed()) {
+            $this->verdict->allow = 1;
+            $this->verdict->comment = 'Offline mode: the JavaScript check has been passed.';
+            return;
+        }
+
+        $this->verdict->allow = 0;
+        $this->verdict->comment = 'Please, enable JavaScript to process the form.';
     }
 
     /**
@@ -149,23 +367,44 @@ class CleantalkAntispam
      *
      * @return CleantalkResponse Response object from the CleanTalk API
      */
-    private function getCleanTalkResponse()
+    private function getCleanTalkResponse($use_offline_timeout = false, $offline_allow_confirmation = false)
     {
         $http = new Request();
-        $this->cleantalk_request_data = $this->prepareCleanTalkRequestData();
-        $response_raw = $http->setUrl(static::MODERATE_URL)
-                            ->setData($this->cleantalk_request_data)
-                            ->request();
+        $this->cleantalk_request_data = $this->prepareCleanTalkRequestData($offline_allow_confirmation);
+        $http->setUrl(static::MODERATE_URL)
+             ->setData($this->cleantalk_request_data);
 
-        // Request::request() returns a non-string (array|bool) on cURL/transport failure, json_decode() would throw a TypeError on PHP 8+
+        // Without the offline fallback a short timeout would only turn slow answers into errors
+        if ($this->isOfflineProtectionConfigured() || $use_offline_timeout) {
+            $timeout = $this->getModerateTimeout();
+            $http->setOptions(array(
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_CONNECTTIMEOUT => $timeout,
+            ));
+        }
+
+        $response_raw = $http->request();
+        $http_code = $http->response instanceof Response ? (int)$http->response->getResponseCode() : 0;
+
+        // Request::request() returns array|bool on transport failure, json_decode() would throw a TypeError on PHP 8+
         if (!is_string($response_raw)) {
             $error = is_array($response_raw) && !empty($response_raw['error'])
-                ? $response_raw['error']
+                ? (string)$response_raw['error']
                 : 'Empty or invalid response received from the CleanTalk server';
             return new CleantalkResponse(null, null, $error);
         }
 
-        return new CleantalkResponse(@json_decode($response_raw), null);
+        // Anything but HTTP 200 with a JSON object is treated as the server being unreachable
+        if ($http_code !== 200) {
+            return new CleantalkResponse(null, null, 'HTTP code ' . $http_code);
+        }
+
+        $decoded = @json_decode($response_raw);
+        if (!is_object($decoded)) {
+            return new CleantalkResponse(null, null, 'Unexpected response from the moderate server');
+        }
+
+        return new CleantalkResponse($decoded, null);
     }
 
     /**
@@ -237,8 +476,16 @@ class CleantalkAntispam
      *
      * @return string JSON encoded request data
      */
-    private function prepareCleanTalkRequestData()
+    private function prepareCleanTalkRequestData($offline_allow_confirmation = false)
     {
+        $sender_info = array(
+            'REFFERRER' => !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
+        );
+        if ($offline_allow_confirmation) {
+            $sender_info['ct_offline_mode'] = 1;
+            $sender_info['ct_offline_allow'] = 1;
+        }
+
         $data = array(
             'method_name' => $this->method_name,
             'auth_key' => $this->access_key,
@@ -248,13 +495,9 @@ class CleantalkAntispam
             'sender_ip' => $this->ip,
             'js_on' => !empty($this->event_token) ? 1 : 0,
             'event_token' => $this->event_token,
-            'agent' => 'php-cleantalk-check',
+            'agent' => 'php-cleantalk-check-' . static::VERSION,
             'all_headers' => $this->getAllHeaders(),
-            'sender_info' => @json_encode(
-                array(
-                    'REFFERRER' => !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
-                )
-            ),
+            'sender_info' => @json_encode($sender_info),
         );
         if ( isset($this->event_token_enabled) ) {
             $data['event_token_enabled'] = $this->event_token_enabled;
@@ -423,6 +666,19 @@ class CleantalkAntispam
     }
 
     /**
+     * Enable a cloud check after a positive verdict in forced offline mode.
+     *
+     * @param bool $enabled
+     * @return $this
+     */
+    public function setForcedOfflineCloudCheckEnabled($enabled = true)
+    {
+        $this->fluidCallStack(__FUNCTION__);
+        $this->forced_offline_cloud_check_enabled = (bool)$enabled;
+        return $this;
+    }
+
+    /**
      * Set the event token.
      *
      * @param string|null $event_token Event token
@@ -501,22 +757,56 @@ class CleantalkAntispam
             $this->method_name = empty($this->message) ? 'check_newuser' : 'check_message';
         }
 
+        if ($this->isForcedOfflineMode()) {
+            $this->cleantalk_request_data = $this->prepareCleanTalkRequestData();
+            $this->applyOfflineVerdict('The CLEANTALK_OFFLINE_MODE constant is enabled; the initial verdict was made locally.');
+
+            if ($this->verdict->allow && $this->forced_offline_cloud_check_enabled) {
+                $this->cleantalk_response = $this->getCleanTalkResponse(true, true);
+
+                if ($this->cleantalk_response->error) {
+                    $this->offline_reason = 'The moderate server could not confirm the offline verdict: '
+                        . $this->cleantalk_response->error;
+                } else {
+                    $this->applyCloudVerdict();
+                }
+            }
+
+            return $this->beforeReturnVerdict();
+        }
+
         $this->cleantalk_response = $this->getCleanTalkResponse();
 
         if ($this->cleantalk_response->error) {
+            if ($this->isOfflineProtectionConfigured()) {
+                /** @psalm-suppress InvalidOperand */
+                $this->applyOfflineVerdict('The moderate server is unreachable: ' . $this->cleantalk_response->error);
+                return $this->beforeReturnVerdict();
+            }
+
             /** @psalm-suppress InvalidOperand */
             $this->verdict->error = 'CleanTalk moderate server error: ' . $this->cleantalk_response->error;
             return $this->beforeReturnVerdict();
         }
 
+        $this->applyCloudVerdict();
+
+        return $this->beforeReturnVerdict();
+    }
+
+    /**
+     * Apply the cloud response as the final verdict.
+     */
+    private function applyCloudVerdict()
+    {
         $this->verdict->allow = $this->cleantalk_response->allow;
         $this->verdict->comment = $this->cleantalk_response->comment;
         $this->verdict->request_link = !empty($this->cleantalk_response->id)
             ? 'https://cleantalk.org/my/show_requests?request_id=' . $this->cleantalk_response->id
             : null
         ;
-
-        return $this->beforeReturnVerdict();
+        $this->verdict->offline = false;
+        $this->offline_reason = null;
     }
 
     /**
@@ -528,6 +818,8 @@ class CleantalkAntispam
      */
     private function setImprovementSuggestions()
     {
+        $this->setOfflineImprovementSuggestions();
+
         if ( $this->cleantalk_response instanceof CleantalkResponse ) {
             if (empty($this->cleantalk_response->comment)) {
                 $this->setImprovementSuggestion(
@@ -648,6 +940,47 @@ class CleantalkAntispam
     private function setImprovementSuggestion($level, $message, $stack = null)
     {
         $this->improvement_suggestions[$level][] = array('stack' => $stack, 'message' => $message);
+    }
+
+    /**
+     * Set suggestions related to the offline protection.
+     */
+    private function setOfflineImprovementSuggestions()
+    {
+        if (!$this->isOfflineProtectionConfigured() && !$this->isForcedOfflineMode()) {
+            $this->setImprovementSuggestion(
+                'average',
+                'The offline protection is not configured, so every request is passed through while the moderate server is unreachable. Please, define the CLEANTALK_SALT and CLEANTALK_ACCOUNT_EMAIL constants and print getFrontendHTMLCode() with the access key on the page with the form.',
+                'isOfflineProtectionConfigured()'
+            );
+            return;
+        }
+
+        if (static::getJsCheckScriptUrl() === null) {
+            $this->setImprovementSuggestion(
+                'critical',
+                'The ' . static::JS_CHECK_SCRIPT_NAME . ' file is not reachable from the web, so every visitor will be blocked while the moderate server is down. Please, define the CLEANTALK_JS_URL constant with the public URL of the library js directory.',
+                'getJsCheckScriptUrl()'
+            );
+        }
+
+        if ($this->offline_reason === null) {
+            return;
+        }
+
+        $this->setImprovementSuggestion(
+            'critical',
+            'The verdict has been made locally. ' . $this->offline_reason,
+            'applyOfflineVerdict()'
+        );
+
+        if (!$this->isJsCheckPassed()) {
+            $this->setImprovementSuggestion(
+                'critical',
+                'The ' . static::JS_CHECK_COOKIE_NAME . ' cookie is missing or does not match, so the request has been BLOCKED. Make sure getFrontendHTMLCode() is called with the same access key on the page with the form.',
+                'isJsCheckPassed()'
+            );
+        }
     }
 
     /**
