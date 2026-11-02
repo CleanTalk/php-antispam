@@ -1,7 +1,18 @@
 <?php
-require_once '../../../php-antispam/cleantalk-antispam.php';
+require_once __DIR__ . '/../../cleantalk-antispam.php';
 
 use CleanTalk\CleantalkAntispam;
+
+// CLEANTALK ANTISPAM SETTINGS: must be the same on the form page and in the form handler
+define('CLEANTALK_ACCOUNT_EMAIL', 'you@example.com');               // required: CleanTalk account email
+define('CLEANTALK_SALT', 'replace-with-a-random-string-32-chars');  // required: secret string, at least 32 characters
+// define('CLEANTALK_JS_URL', '/cleantalk');                        // if the library is outside the web root
+
+$api_key = getenv('CLEANTALK_API_KEY');
+if (empty($api_key)) {
+    throw new RuntimeException('CLEANTALK_API_KEY is not configured');
+}
+// END OF CLEANTALK ANTISPAM SETTINGS
 
 ?>
 <!DOCTYPE html>
@@ -61,8 +72,8 @@ use CleanTalk\CleantalkAntispam;
         }
     </style>
 
-    <!-- CLEANTALK ANTISPAM -->
-    <script src="https://fd.cleantalk.org/ct-bot-detector-wrapper.js" defer></script>
+    <!-- CLEANTALK ANTISPAM: Bot Detector and the JavaScript check for offline protection -->
+    <?php echo CleantalkAntispam::getFrontendHTMLCode($api_key); ?>
     <!-- END OF CLEANTALK ANTISPAM -->
 </head>
 <body>
@@ -87,26 +98,17 @@ use CleanTalk\CleantalkAntispam;
             $messageType = 'error';
         }
 
-        if ($messageType !== 'error' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $statusMessage = 'Please enter a valid email address.';
-            $messageType = 'error';
-        }
-
         // HANDLE CLEANTALK ANTISPAM
         if ($messageType !== 'error') {
-            $api_key = getenv('CLEANTALK_API_KEY');
-            if (empty($api_key)) {
-                throw new RuntimeException('CLEANTALK_API_KEY is not configured');
-            }
-
             $cleantalk_antispam = (new CleantalkAntispam($api_key))
                 ->useContactFormCheck()
+                ->setEventTokenEnabled(1) // required: Bot Detector is included via getFrontendHTMLCode()
                 ->setEmail($email)
                 ->setNickName($name)
-                ->setMessage($message)
-                ->setEventTokenEnabled(1);
+                ->setMessage($message);
             $api_result = $cleantalk_antispam->handle();
-            if ($api_result->allow === 0) {
+            // $api_result->offline is true when the cloud was unavailable and the JavaScript check decided
+            if (!$api_result->allow) {
                 $statusMessage = 'Spam detected - ' . $api_result->comment;
                 $messageType = 'error';
             }
