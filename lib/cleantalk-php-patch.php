@@ -86,9 +86,35 @@ if (! function_exists('utf8_decode')) {
     }
 }
 
+/**
+ * array_column() polyfill for PHP 5.5-
+ * Matches the native signature, including the optional $index_key parameter.
+ */
 if (! function_exists("array_column")) {
-    function array_column($array, $column_name)
+    function array_column($array, $column_name, $index_key = null)
     {
+        // Native semantics for an index key or a null column: skip rows without the column, key by $index_key when present.
+        if ($index_key !== null || $column_name === null) {
+            $result = array();
+            foreach ($array as $element) {
+                if ($column_name === null) {
+                    $value = $element;
+                } elseif (is_array($element) && array_key_exists($column_name, $element)) {
+                    $value = $element[$column_name];
+                } else {
+                    continue;
+                }
+                if ($index_key !== null && is_array($element) && array_key_exists($index_key, $element)) {
+                    $result[$element[$index_key]] = $value;
+                } else {
+                    $result[] = $value;
+                }
+            }
+
+            return $result;
+        }
+
+        // Two-argument calls keep the original behaviour.
         return array_map(static function ($element) use ($column_name) {
             return $element[$column_name];
         }, $array);
