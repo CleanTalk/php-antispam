@@ -430,7 +430,16 @@ class Helper
     {
         $cidr = explode('/', $cidr);
 
-        return isset($cidr[0], $cidr[1]) && self::ipValidate($cidr[0]) && preg_match('@\d{1,2}@', $cidr[1]);
+        // The prefix must be a plain decimal number
+        if ( count($cidr) !== 2 || ! preg_match('@^\d{1,3}\z@', $cidr[1]) ) {
+            return false;
+        }
+
+        // The prefix must fit the address family
+        $ip_type = self::ipValidate($cidr[0]);
+        $max_prefix = $ip_type === 'v6' ? 128 : 32;
+
+        return $ip_type !== false && (int) $cidr[1] <= $max_prefix;
     }
 
     /**
